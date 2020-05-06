@@ -37,13 +37,13 @@ impl Layout {
     }
 
     pub fn version(&self) -> Result<Version, &str> {
-        match self.time_high_and_version >> 4 {
+        match (self.time_high_and_version >> 12) & 0xf {
+            0x00 => Err("00000000-0000-0000-0000-000000000000"),
             0x01 => Ok(Version::TIME),
             0x02 => Ok(Version::DCE),
             0x03 => Ok(Version::MD5),
             0x04 => Ok(Version::RAND),
             0x05 => Ok(Version::SHA1),
-            0x00 => Err("00000000-0000-0000-0000-000000000000"),
             _ => Err("Unknown uuid version"),
         }
     }
@@ -95,21 +95,21 @@ pub struct Uuid {
 }
 
 impl Uuid {
-    pub fn v1(dur: time::Duration, node: [u8; 6]) -> Layout {
-        assert_ne!(dur.cmp(&time::Duration::new(0, 0)), Ordering::Equal);
+    pub fn v1(d: time::Duration, n: [u8; 6]) -> Layout {
         let ts = Timestamp {
-            utc: dur,
-            cs: ClockSeq((dur.subsec_millis() >> 16) as u16),
+            utc: d,
+            cs: ClockSeq((d.subsec_millis() >> 16) as u16),
         };
-
+        // let mm = ts.utc.as_secs()
         Layout {
             time_low: ((ts.utc.as_nanos() & 0xffff_ffff) as u32),
             time_mid: ((ts.utc.as_nanos() >> 32 & 0xffff) as u16),
-            time_high_and_version: (ts.utc.as_nanos() >> 48 & 0xfff) as u16
+            time_high_and_version: ((ts.utc.as_nanos() as u64) >> 48 & 0x0fff) as u16
                 | ((Version::TIME as u16) << 12),
-            clock_seq_high_and_reserved: (((ts.cs.new() >> 8) & 0xff) | Variant::RFC as u16) as u8,
-            clock_seq_low: (ts.cs.new() & 0xff) as u8,
-            node_id: node,
+            clock_seq_high_and_reserved: (((ts.cs.new() >> 8) & 0x00ff) | Variant::RFC as u16)
+                as u8,
+            clock_seq_low: (ts.cs.new() & 0x00ff) as u8,
+            node_id: n,
         }
     }
 
@@ -125,6 +125,15 @@ impl Uuid {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_time_based() {
+        let uuid = Uuid::v1(
+            std::time::Duration::from_secs(1588784260),
+            [40, 14, 22, 04, 25, 37],
+        );
+        assert_eq!(uuid.version().unwrap(), Version::TIME)
+    }
 
     #[test]
     fn test_is_valid_len() {
