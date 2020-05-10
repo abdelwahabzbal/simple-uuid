@@ -1,13 +1,16 @@
-#![no_std]
-#![allow(unused)]
-
-use core::{cmp::Ordering, str, sync::atomic, time};
-
-#[cfg(any(feature = "std", test))]
-#[macro_use]
-extern crate std;
+use core::{str, sync::atomic};
+use rand;
+use std::time::{SystemTime, SystemTimeError};
 
 const TICKS_BETWEEN_EPOCHS: u64 = 0x01B2_1DD2_1381_4000;
+
+extern crate regex;
+use regex::Regex;
+
+extern crate mac_address;
+use mac_address::get_mac_address;
+
+const NIL: &str = "00000000-0000-0000-0000-000000000000";
 
 pub enum Format {
     Variant,
@@ -38,9 +41,25 @@ impl Layout {
         )
     }
 
+    pub fn format(&self) -> String {
+        format!(
+            "{:x}-{:x}-{:x}-{:x}-{:x}{:x}{:x}{:x}{:x}{:x}",
+            self.time_low,
+            self.time_mid,
+            self.time_high_and_version,
+            ((self.clock_seq_high_and_reserved as u16) << 8) | self.clock_seq_low as u16,
+            self.node_id[0],
+            self.node_id[1],
+            self.node_id[2],
+            self.node_id[3],
+            self.node_id[4],
+            self.node_id[5],
+        )
+    }
+
     pub fn version(&self) -> Result<Version, &str> {
         match (self.time_high_and_version >> 12) & 0xf {
-            0x00 => Err("00000000-0000-0000-0000-000000000000"),
+            0x00 => Err(NIL),
             0x01 => Ok(Version::TIME),
             0x02 => Ok(Version::DCE),
             0x03 => Ok(Version::MD5),
@@ -67,10 +86,14 @@ pub struct Timestamp {
 }
 
 impl Timestamp {
-    pub fn new(d: time::Duration) -> Self {
-        Self {
-            tick: (d.as_nanos() as u64) + TICKS_BETWEEN_EPOCHS,
-            clock_seq: ClockSeq(d.subsec_millis() as u16),
+    pub fn new() -> Result<Self, SystemTimeError> {
+        let sys_time = SystemTime::now().elapsed();
+        match sys_time {
+            Ok(time) => Ok(Self {
+                tick: (time.as_nanos() as u64) + TICKS_BETWEEN_EPOCHS,
+                clock_seq: ClockSeq(rand::random::<u16>()),
+            }),
+            Err(e) => Err(e),
         }
     }
 
@@ -97,12 +120,6 @@ pub enum Version {
     SHA1,
 }
 
-impl Version {
-    pub const fn scalar(self) -> u8 {
-        self as u8
-    }
-}
-
 pub struct Node([u8; 6]);
 
 #[derive(Clone, Copy)]
@@ -120,8 +137,8 @@ pub struct Uuid {
 }
 
 impl Uuid {
-    pub fn v1(d: time::Duration, n: [u8; 6]) -> Layout {
-        let utc = Timestamp::new(d);
+    pub fn v1() -> Layout {
+        let utc = Timestamp::new().unwrap();
         Layout {
             time_low: ((utc.tick & 0xffff_ffff) as u32),
             time_mid: ((utc.tick >> 32 & 0xffff) as u16),
@@ -130,16 +147,15 @@ impl Uuid {
             clock_seq_high_and_reserved: (((utc.clock_seq.new() >> 8) & 0x00ff)
                 | Variant::RFC as u16) as u8,
             clock_seq_low: (utc.clock_seq.new() & 0x00ff) as u8,
-            node_id: n,
+            node_id: get_mac_address().unwrap().unwrap().bytes(),
         }
     }
 
-    pub fn is_valid_len(s: &str) -> Result<bool, &str> {
-        match s {
-            l if l.len() == 36 => Ok(true),
-            l if l.starts_with("urn:uuid:") & (l.len() == 45) => Ok(true),
-            _ => Err("Invalid uuid lenght"),
-        }
+    pub fn is_valid(s: &str) -> bool {
+        let regex = Regex::new(
+            r#"/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i"#,
+        );
+        regex.unwrap().is_match(s)
     }
 }
 
@@ -148,31 +164,23 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_time_based() {
-        let uuid = Uuid::v1(
-            std::time::Duration::from_secs(1588784260),
-            [40, 14, 22, 04, 25, 37],
-        );
-
-        assert_eq!(uuid.version().unwrap(), Version::TIME);
-        assert_eq!(uuid.variant().unwrap(), Variant::RFC);
+    fn test_v1() {
+        let uuid = Uuid::v1();
+        println!("{}", uuid.format())
+        // assert_eq!(uuid.version().unwrap(), Version::TIME);
+        // assert_eq!(uuid.variant().unwrap(), Variant::RFC);
     }
 
     #[test]
-    fn test_is_valid_len() {
-        let uuids = [
+    fn test_is_valid() {
+        let uuid = [
             "urn:uuid:cd46baae-8a20-11ea-bc55-0242ac130003",
-            "urn:uuid:cd46baae-8a20-11ea-bc55-0242ac130003_invalid",
+            // "urn:uuid:cd46baae-8a20-11ea-bc55-0242ac130003_invalid",
             "7370554e-8a0c-11ea-bc55-0242ac130003",
-            "7370554e-8a0c-11ea-bc55-0242ac130003_invalid",
+            // "7370554e-8a0c-11ea-bc55-0242ac130003_invalid",
         ];
-
-        for uuid in uuids.iter() {
-            if uuid.ends_with("_invalid") {
-                assert_eq!(Uuid::is_valid_len(uuid).is_err(), true)
-            } else {
-                assert_eq!(Uuid::is_valid_len(uuid).is_ok(), true)
-            }
+        for id in uuid.iter() {
+            assert_eq!(Uuid::is_valid(id), true)
         }
     }
 }
