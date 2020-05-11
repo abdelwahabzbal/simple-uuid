@@ -2,7 +2,7 @@ use core::{str, sync::atomic};
 use rand;
 use std::time::{SystemTime, SystemTimeError};
 
-const TICKS_BETWEEN_EPOCHS: u64 = 0x01B2_1DD2_1381_4000;
+const NANO_TICKS_BETWEEN_EPOCHS: u64 = 0x01B2_1DD2_1381_4000;
 
 extern crate regex;
 use regex::Regex;
@@ -11,6 +11,8 @@ extern crate mac_address;
 use mac_address::get_mac_address;
 
 const NIL: &str = "00000000-0000-0000-0000-000000000000";
+
+pub type Bytes = [u8];
 
 pub enum Format {
     Variant,
@@ -27,7 +29,7 @@ pub struct Layout {
     time_high_and_version: u16,
     clock_seq_high_and_reserved: u8,
     clock_seq_low: u8,
-    node_id: [u8; 6],
+    node: [u8; 6],
 }
 
 impl Layout {
@@ -37,7 +39,7 @@ impl Layout {
             self.time_mid,
             self.time_high_and_version,
             ((self.clock_seq_high_and_reserved as u16) << 8) | self.clock_seq_low as u16,
-            self.node_id,
+            self.node,
         )
     }
 
@@ -48,12 +50,12 @@ impl Layout {
             self.time_mid,
             self.time_high_and_version,
             ((self.clock_seq_high_and_reserved as u16) << 8) | self.clock_seq_low as u16,
-            self.node_id[0],
-            self.node_id[1],
-            self.node_id[2],
-            self.node_id[3],
-            self.node_id[4],
-            self.node_id[5],
+            self.node[0],
+            self.node[1],
+            self.node[2],
+            self.node[3],
+            self.node[4],
+            self.node[5],
         )
     }
 
@@ -70,7 +72,7 @@ impl Layout {
     }
 
     pub fn variant(&self) -> Result<Variant, &str> {
-        match self.clock_seq_high_and_reserved & 0xf {
+        match (self.clock_seq_high_and_reserved >> 4) & 0xf {
             0x00 => Ok(Variant::NCS),
             0x01 => Ok(Variant::RFC),
             0x02 => Ok(Variant::MS),
@@ -82,15 +84,15 @@ impl Layout {
 
 pub struct Timestamp {
     pub tick: u64,
-    clock_seq: ClockSeq,
+    pub clock_seq: ClockSeq,
 }
 
 impl Timestamp {
     pub fn new() -> Result<Self, SystemTimeError> {
-        let sys_time = SystemTime::now().elapsed();
-        match sys_time {
+        match SystemTime::now().elapsed() {
             Ok(time) => Ok(Self {
-                tick: (time.as_nanos() as u64) + TICKS_BETWEEN_EPOCHS,
+                tick: ((time.as_nanos() & 0xffff_ffff_ffff_ffff) as u64)
+                    + NANO_TICKS_BETWEEN_EPOCHS,
                 clock_seq: ClockSeq(rand::random::<u16>()),
             }),
             Err(e) => Err(e),
@@ -120,7 +122,7 @@ pub enum Version {
     SHA1,
 }
 
-pub struct Node([u8; 6]);
+pub struct Node(Bytes);
 
 #[derive(Clone, Copy)]
 pub struct ClockSeq(u16);
@@ -133,27 +135,26 @@ impl ClockSeq {
 
 #[derive(Debug)]
 pub struct Uuid {
-    pub bytes: [u8; 16],
+    pub bytes: Bytes,
 }
 
 impl Uuid {
     pub fn v1() -> Layout {
         let utc = Timestamp::new().unwrap();
+        let clock_seq = utc.clock_seq.new();
         Layout {
             time_low: ((utc.tick & 0xffff_ffff) as u32),
             time_mid: ((utc.tick >> 32 & 0xffff) as u16),
-            time_high_and_version: ((utc.tick as u64) >> 48 & 0x0fff) as u16
-                | ((Version::TIME as u16) << 12),
-            clock_seq_high_and_reserved: (((utc.clock_seq.new() >> 8) & 0x00ff)
-                | Variant::RFC as u16) as u8,
-            clock_seq_low: (utc.clock_seq.new() & 0x00ff) as u8,
-            node_id: get_mac_address().unwrap().unwrap().bytes(),
+            time_high_and_version: (utc.tick >> 48 & 0xfff) as u16 | (Version::TIME as u16) << 12,
+            clock_seq_high_and_reserved: ((clock_seq >> 8) & 0xf) as u8 | (Variant::RFC as u8) << 4,
+            clock_seq_low: (clock_seq & 0xff) as u8,
+            node: get_mac_address().unwrap().unwrap().bytes(),
         }
     }
 
     pub fn is_valid(s: &str) -> bool {
         let regex = Regex::new(
-            r#"/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i"#,
+            r"^(?i)(urn:uuid:)?[0-9a-f]{8}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{12}$",
         );
         regex.unwrap().is_match(s)
     }
@@ -166,21 +167,34 @@ mod tests {
     #[test]
     fn test_v1() {
         let uuid = Uuid::v1();
-        println!("{}", uuid.format())
-        // assert_eq!(uuid.version().unwrap(), Version::TIME);
-        // assert_eq!(uuid.variant().unwrap(), Variant::RFC);
+        assert_eq!(uuid.version().unwrap(), Version::TIME);
+        assert_eq!(uuid.variant().unwrap(), Variant::RFC);
     }
 
     #[test]
-    fn test_is_valid() {
+    fn test_valid_uuid() {
         let uuid = [
-            "urn:uuid:cd46baae-8a20-11ea-bc55-0242ac130003",
-            // "urn:uuid:cd46baae-8a20-11ea-bc55-0242ac130003_invalid",
-            "7370554e-8a0c-11ea-bc55-0242ac130003",
-            // "7370554e-8a0c-11ea-bc55-0242ac130003_invalid",
+            "urn:uuid:7370554e-8a0c-11ea-bc55-0242ac130003",
+            "URN:UUID:0C0BF838-9388-11EA-BB37-0242AC130002",
+            "0c0bf838-9388-11ea-bb37-0242ac130002",
+            "0C0BF838-9388-11EA-BB37-0242AC130002",
         ];
         for id in uuid.iter() {
-            assert_eq!(Uuid::is_valid(id), true)
+            assert!(Uuid::is_valid(id))
+        }
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_invalid_uuid() {
+        let uuid = [
+            "urn:uuid:7370554e-8a0c-11ea-bc55-0242ac130003_invalid",
+            "URN:UUID:0C0BF838-9388-11EA-BB37-0242AC130002_INVALID",
+            "0c0bf838-9388-11ea-bb37-0242ac130002_invalid",
+            "0C0BF838-9388-11EA-BB37-0242AC130002_INVALID",
+        ];
+        for id in uuid.iter() {
+            assert!(Uuid::is_valid(id))
         }
     }
 }
