@@ -43,7 +43,7 @@ impl Layout {
         )
     }
 
-    pub fn format(&self) -> String {
+    pub fn to_string(&self) -> String {
         format!(
             "{:x}-{:x}-{:x}-{:x}-{:x}{:x}{:x}{:x}{:x}{:x}",
             self.time_low,
@@ -84,7 +84,6 @@ impl Layout {
 
 pub struct Timestamp {
     pub tick: u64,
-    pub clock_seq: ClockSeq,
 }
 
 impl Timestamp {
@@ -93,14 +92,9 @@ impl Timestamp {
             Ok(time) => Ok(Self {
                 tick: ((time.as_nanos() & 0xffff_ffff_ffff_ffff) as u64)
                     + NANO_TICKS_BETWEEN_EPOCHS,
-                clock_seq: ClockSeq(rand::random::<u16>()),
             }),
             Err(e) => Err(e),
         }
-    }
-
-    pub fn clock_seq(&self) -> ClockSeq {
-        self.clock_seq
     }
 }
 
@@ -128,8 +122,8 @@ pub struct Node(Bytes);
 pub struct ClockSeq(u16);
 
 impl ClockSeq {
-    pub fn new(self) -> u16 {
-        atomic::AtomicU16::new(self.0).fetch_add(1, atomic::Ordering::AcqRel)
+    pub fn new(r: u16) -> u16 {
+        atomic::AtomicU16::new(r).fetch_add(1, atomic::Ordering::AcqRel)
     }
 }
 
@@ -141,7 +135,8 @@ pub struct Uuid {
 impl Uuid {
     pub fn v1() -> Layout {
         let utc = Timestamp::new().unwrap();
-        let clock_seq = utc.clock_seq.new();
+        let clock_seq = ClockSeq::new(rand::random::<u16>());
+
         Layout {
             time_low: ((utc.tick & 0xffff_ffff) as u32),
             time_mid: ((utc.tick >> 32 & 0xffff) as u16),
@@ -169,6 +164,12 @@ mod tests {
         let uuid = Uuid::v1();
         assert_eq!(uuid.version().unwrap(), Version::TIME);
         assert_eq!(uuid.variant().unwrap(), Variant::RFC);
+    }
+
+    #[test]
+    fn test_format() {
+        let uuid = Uuid::v1();
+        assert!(Uuid::is_valid(&uuid.to_string()))
     }
 
     #[test]
