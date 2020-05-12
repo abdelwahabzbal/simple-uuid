@@ -2,18 +2,15 @@ use core::{str, sync::atomic};
 use rand;
 use std::time::{SystemTime, SystemTimeError};
 
-const NANO_TICKS_BETWEEN_EPOCHS: u64 = 0x01B2_1DD2_1381_4000;
-
 extern crate regex;
 use regex::Regex;
 
 extern crate mac_address;
 use mac_address::get_mac_address;
 
-const NIL: &str = "00000000-0000-0000-0000-000000000000";
+pub const NANO_TICKS_BETWEEN_EPOCHS: u64 = 0x01B2_1DD2_1381_4000;
 
-pub type Bytes = [u8];
-
+#[derive(Debug)]
 pub enum Format {
     Variant,
     Layout,
@@ -23,6 +20,7 @@ pub enum Format {
     Node,
 }
 
+#[derive(Debug)]
 pub struct Layout {
     time_low: u32,
     time_mid: u16,
@@ -33,52 +31,55 @@ pub struct Layout {
 }
 
 impl Layout {
-    pub fn as_fields(&self) -> (u32, u16, u16, u16, [u8; 6]) {
+    pub fn as_fields(&self) -> (u32, u16, u16, u16, u64) {
         (
             self.time_low,
             self.time_mid,
             self.time_high_and_version,
             ((self.clock_seq_high_and_reserved as u16) << 8) | self.clock_seq_low as u16,
-            self.node,
+            (self.node[0] as u64) << 40
+                | (self.node[1] as u64) << 32
+                | (self.node[2] as u64) << 24
+                | (self.node[3] as u64) << 16
+                | (self.node[4] as u64) << 8
+                | (self.node[5] as u64),
         )
     }
 
     pub fn to_string(&self) -> String {
         format!(
-            "{:x}-{:x}-{:x}-{:x}-{:x}{:x}{:x}{:x}{:x}{:x}",
-            self.time_low,
-            self.time_mid,
-            self.time_high_and_version,
-            ((self.clock_seq_high_and_reserved as u16) << 8) | self.clock_seq_low as u16,
-            self.node[0],
-            self.node[1],
-            self.node[2],
-            self.node[3],
-            self.node[4],
-            self.node[5],
+            "{:x}-{:x}-{:x}-{:x}-{:x}",
+            Self::as_fields(self).0,
+            Self::as_fields(self).1,
+            Self::as_fields(self).2,
+            Self::as_fields(self).3,
+            Self::as_fields(self).4,
         )
     }
 
-    pub fn version(&self) -> Result<Version, &str> {
+    pub fn version(&self) -> Option<Version> {
         match (self.time_high_and_version >> 12) & 0xf {
-            0x00 => Err(NIL),
-            0x01 => Ok(Version::TIME),
-            0x02 => Ok(Version::DCE),
-            0x03 => Ok(Version::MD5),
-            0x04 => Ok(Version::RAND),
-            0x05 => Ok(Version::SHA1),
-            _ => Err("unknown uuid version"),
+            0x01 => Some(Version::TIME),
+            0x02 => Some(Version::DCE),
+            0x03 => Some(Version::MD5),
+            0x04 => Some(Version::RAND),
+            0x05 => Some(Version::SHA1),
+            _ => None,
         }
     }
 
-    pub fn variant(&self) -> Result<Variant, &str> {
+    pub fn variant(&self) -> Option<Variant> {
         match (self.clock_seq_high_and_reserved >> 4) & 0xf {
-            0x00 => Ok(Variant::NCS),
-            0x01 => Ok(Variant::RFC),
-            0x02 => Ok(Variant::MS),
-            0x03 => Ok(Variant::FUT),
-            _ => Err("unknown uuid variant"),
+            0x00 => Some(Variant::NCS),
+            0x01 => Some(Variant::RFC),
+            0x02 => Some(Variant::MS),
+            0x03 => Some(Variant::FUT),
+            _ => None,
         }
+    }
+
+    pub fn get_mac(&self) -> Node {
+        Node(self.node)
     }
 }
 
@@ -108,15 +109,23 @@ pub enum Variant {
 
 #[derive(Debug, Eq, PartialEq)]
 pub enum Version {
-    NIL = 0,
-    TIME,
+    TIME = 1,
     DCE,
     MD5,
     RAND,
     SHA1,
 }
 
-pub struct Node(Bytes);
+pub struct Node([u8; 6]);
+
+impl Node {
+    pub fn to_string(&self) -> String {
+        format!(
+            "{:x}-{:x}-{:x}-{:x}-{:x}-{:x}-",
+            self.0[0], self.0[1], self.0[2], self.0[3], self.0[4], self.0[5]
+        )
+    }
+}
 
 #[derive(Clone, Copy)]
 pub struct ClockSeq(u16);
@@ -129,7 +138,7 @@ impl ClockSeq {
 
 #[derive(Debug)]
 pub struct Uuid {
-    pub bytes: Bytes,
+    pub bytes: [u8; 16],
 }
 
 impl Uuid {
@@ -162,12 +171,12 @@ mod tests {
     #[test]
     fn test_v1() {
         let uuid = Uuid::v1();
-        assert_eq!(uuid.version().unwrap(), Version::TIME);
-        assert_eq!(uuid.variant().unwrap(), Variant::RFC);
+        assert_eq!(uuid.version(), Some(Version::TIME));
+        assert_eq!(uuid.variant(), Some(Variant::RFC));
     }
 
     #[test]
-    fn test_format() {
+    fn test_to_string() {
         let uuid = Uuid::v1();
         assert!(Uuid::is_valid(&uuid.to_string()))
     }
@@ -180,6 +189,7 @@ mod tests {
             "0c0bf838-9388-11ea-bb37-0242ac130002",
             "0C0BF838-9388-11EA-BB37-0242AC130002",
         ];
+
         for id in uuid.iter() {
             assert!(Uuid::is_valid(id))
         }
@@ -194,6 +204,7 @@ mod tests {
             "0c0bf838-9388-11ea-bb37-0242ac130002_invalid",
             "0C0BF838-9388-11EA-BB37-0242AC130002_INVALID",
         ];
+
         for id in uuid.iter() {
             assert!(Uuid::is_valid(id))
         }
