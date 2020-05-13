@@ -87,18 +87,6 @@ pub struct Timestamp {
     pub tick: u64,
 }
 
-impl Timestamp {
-    pub fn new() -> Result<Self, SystemTimeError> {
-        match SystemTime::now().elapsed() {
-            Ok(time) => Ok(Self {
-                tick: ((time.as_nanos() & 0xffff_ffff_ffff_ffff) as u64)
-                    + NANO_TICKS_BETWEEN_EPOCHS,
-            }),
-            Err(e) => Err(e),
-        }
-    }
-}
-
 #[derive(Debug, Eq, PartialEq)]
 pub enum Variant {
     NCS = 0,
@@ -158,13 +146,14 @@ pub struct Uuid {
 
 impl Uuid {
     pub fn v1() -> Layout {
-        let utc = Timestamp::new().unwrap();
+        let tick = SystemTime::now().elapsed().unwrap();
+        let utc = ((tick.as_nanos() & 0xffff_ffff_ffff_ffff) as u64) + NANO_TICKS_BETWEEN_EPOCHS;
         let clock_seq = ClockSeq::new(rand::random::<u16>());
 
         Layout {
-            time_low: ((utc.tick & 0xffff_ffff) as u32),
-            time_mid: ((utc.tick >> 32 & 0xffff) as u16),
-            time_high_and_version: (utc.tick >> 48 & 0xfff) as u16 | (Version::TIME as u16) << 12,
+            time_low: ((utc & 0xffff_ffff) as u32),
+            time_mid: ((utc >> 32 & 0xffff) as u16),
+            time_high_and_version: (utc >> 48 & 0xfff) as u16 | (Version::TIME as u16) << 12,
             clock_seq_high_and_reserved: ((clock_seq >> 8) & 0xf) as u8 | (Variant::RFC as u8) << 4,
             clock_seq_low: (clock_seq & 0xff) as u8,
             node: get_mac_address().unwrap().unwrap().bytes(),
