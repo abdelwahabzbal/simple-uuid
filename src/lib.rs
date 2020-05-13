@@ -279,7 +279,9 @@ mod tests {
         assert_eq!(uuid.version(), Some(Version::TIME));
         assert_eq!(uuid.variant(), Some(Variant::RFC));
 
-        assert!(Uuid::is_valid(&format!("{}", uuid)));
+        assert!(Uuid::is_valid(&format!("{}", uuid.as_bytes())));
+        assert!(Uuid::is_valid(&format!("{:x}", uuid.as_bytes())));
+        assert!(Uuid::is_valid(&format!("{:X}", uuid.as_bytes())));
     }
 
     #[test]
