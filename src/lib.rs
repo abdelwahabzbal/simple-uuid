@@ -118,12 +118,27 @@ pub enum Version {
 
 pub struct Node([u8; 6]);
 
-impl Node {
-    pub fn to_string(&self) -> String {
-        format!(
-            "{:x}-{:x}-{:x}-{:x}-{:x}-{:x}-",
-            self.0[0], self.0[1], self.0[2], self.0[3], self.0[4], self.0[5]
-        )
+impl core::fmt::LowerHex for Node {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let n = (self.0[0] as u64) << 40
+            | (self.0[1] as u64) << 32
+            | (self.0[2] as u64) << 24
+            | (self.0[3] as u64) << 16
+            | (self.0[4] as u64) << 8
+            | (self.0[5] as u64);
+        core::fmt::LowerHex::fmt(&n, f)
+    }
+}
+
+impl core::fmt::UpperHex for Node {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let n = (self.0[0] as u64) << 40
+            | (self.0[1] as u64) << 32
+            | (self.0[2] as u64) << 24
+            | (self.0[3] as u64) << 16
+            | (self.0[4] as u64) << 8
+            | (self.0[5] as u64);
+        core::fmt::UpperHex::fmt(&n, f)
     }
 }
 
@@ -176,9 +191,10 @@ mod tests {
     }
 
     #[test]
-    fn test_to_string() {
-        let uuid = Uuid::v1();
-        assert!(Uuid::is_valid(&uuid.to_string()))
+    fn test_node_hex() {
+        let node = Node([121, 42, 53, 13, 19, 34]);
+        assert_eq!(format!("{:x}", node), "792a350d1322");
+        assert_eq!(format!("{:X}", node), "792A350D1322")
     }
 
     #[test]
