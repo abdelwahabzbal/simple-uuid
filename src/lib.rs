@@ -86,11 +86,25 @@ impl Layout {
     }
 }
 
-impl fmt::Display for Layout {
+impl fmt::LowerHex for Layout {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             fmt,
-            "{:x}-{:x}-{:x}-{:x}-{:x}",
+            "{:02x}-{:02x}-{:02x}-{:02x}-{:02x}",
+            self.as_fields().0,
+            self.as_fields().1,
+            self.as_fields().2,
+            self.as_fields().3,
+            self.as_fields().4,
+        )
+    }
+}
+
+impl fmt::UpperHex for Layout {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            fmt,
+            "{:02x}-{:02x}-{:02x}-{:02x}-{:02x}",
             self.as_fields().0,
             self.as_fields().1,
             self.as_fields().2,
@@ -193,31 +207,6 @@ impl Uuid {
     }
 }
 
-impl fmt::Display for Uuid {
-    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            fmt,
-            "{:02x}{:02x}{:02x}{:02x}-{:02x}{:02x}-{:02x}{:02x}-{:02x}{:02x}-{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}",
-            self.0[0],
-            self.0[1],
-            self.0[2],
-            self.0[3],
-            self.0[4],
-            self.0[5],
-            self.0[6],
-            self.0[7],
-            self.0[8],
-            self.0[9],
-            self.0[10],
-            self.0[11],
-            self.0[12],
-            self.0[13],
-            self.0[14],
-            self.0[15],
-        )
-    }
-}
-
 impl fmt::LowerHex for Uuid {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -279,7 +268,9 @@ mod tests {
         assert_eq!(uuid.version(), Some(Version::TIME));
         assert_eq!(uuid.variant(), Some(Variant::RFC));
 
-        assert!(Uuid::is_valid(&format!("{}", uuid.as_bytes())));
+        assert!(Uuid::is_valid(&format!("{:x}", uuid)));
+        assert!(Uuid::is_valid(&format!("{:X}", uuid)));
+
         assert!(Uuid::is_valid(&format!("{:x}", uuid.as_bytes())));
         assert!(Uuid::is_valid(&format!("{:X}", uuid.as_bytes())));
     }
