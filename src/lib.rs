@@ -1,19 +1,16 @@
-use core::{str, sync::atomic};
-use rand;
-use std::time::{SystemTime, SystemTimeError};
+use core::{fmt, str, sync::atomic};
+use std::time::SystemTime;
 
-extern crate regex;
-use regex::Regex;
-
-extern crate mac_address;
 use mac_address::get_mac_address;
+use rand;
+use regex::Regex;
 
 pub const NANO_TICKS_BETWEEN_EPOCHS: u64 = 0x01B2_1DD2_1381_4000;
 
 #[derive(Debug)]
 pub enum Format {
-    Variant,
     Layout,
+    Variant,
     Version,
     TimeStamp,
     ClockSeq,
@@ -27,7 +24,7 @@ pub struct Layout {
     time_high_and_version: u16,
     clock_seq_high_and_reserved: u8,
     clock_seq_low: u8,
-    node: [u8; 6],
+    node: Id,
 }
 
 impl Layout {
@@ -46,15 +43,25 @@ impl Layout {
         )
     }
 
-    pub fn to_string(&self) -> String {
-        format!(
-            "{:x}-{:x}-{:x}-{:x}-{:x}",
-            Self::as_fields(self).0,
-            Self::as_fields(self).1,
-            Self::as_fields(self).2,
-            Self::as_fields(self).3,
-            Self::as_fields(self).4,
-        )
+    pub fn as_bytes(&self) -> Uuid {
+        Uuid([
+            self.time_low.to_be_bytes()[0],
+            self.time_low.to_be_bytes()[1],
+            self.time_low.to_be_bytes()[2],
+            self.time_low.to_be_bytes()[3],
+            self.time_mid.to_be_bytes()[0],
+            self.time_mid.to_be_bytes()[1],
+            self.time_high_and_version.to_be_bytes()[0],
+            self.time_high_and_version.to_be_bytes()[1],
+            self.clock_seq_high_and_reserved,
+            self.clock_seq_low,
+            self.node[0],
+            self.node[1],
+            self.node[2],
+            self.node[3],
+            self.node[4],
+            self.node[5],
+        ])
     }
 
     pub fn version(&self) -> Option<Version> {
@@ -77,9 +84,19 @@ impl Layout {
             _ => None,
         }
     }
+}
 
-    pub fn get_mac(&self) -> Node {
-        Node(self.node)
+impl fmt::Display for Layout {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            fmt,
+            "{:x}-{:x}-{:x}-{:x}-{:x}",
+            self.as_fields().0,
+            self.as_fields().1,
+            self.as_fields().2,
+            self.as_fields().3,
+            self.as_fields().4,
+        )
     }
 }
 
@@ -104,29 +121,41 @@ pub enum Version {
     SHA1,
 }
 
-pub struct Node([u8; 6]);
+pub type Id = [u8; 6];
 
-impl core::fmt::LowerHex for Node {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let n = (self.0[0] as u64) << 40
-            | (self.0[1] as u64) << 32
-            | (self.0[2] as u64) << 24
-            | (self.0[3] as u64) << 16
-            | (self.0[4] as u64) << 8
-            | (self.0[5] as u64);
-        core::fmt::LowerHex::fmt(&n, f)
+pub struct Node(Id);
+
+impl fmt::Display for Node {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            fmt,
+            "{:02x}-{:02x}-{:02x}-{:02x}-{:02x}-{:02x}",
+            self.0[0], self.0[1], self.0[2], self.0[3], self.0[4], self.0[5],
+        )
     }
 }
 
-impl core::fmt::UpperHex for Node {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::LowerHex for Node {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let n = (self.0[0] as u128) << 40
+            | (self.0[1] as u128) << 32
+            | (self.0[2] as u128) << 24
+            | (self.0[3] as u128) << 16
+            | (self.0[4] as u128) << 8
+            | (self.0[5] as u128);
+        fmt::LowerHex::fmt(&n, fmt)
+    }
+}
+
+impl fmt::UpperHex for Node {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         let n = (self.0[0] as u64) << 40
             | (self.0[1] as u64) << 32
             | (self.0[2] as u64) << 24
             | (self.0[3] as u64) << 16
             | (self.0[4] as u64) << 8
             | (self.0[5] as u64);
-        core::fmt::UpperHex::fmt(&n, f)
+        fmt::UpperHex::fmt(&n, fmt)
     }
 }
 
@@ -139,10 +168,10 @@ impl ClockSeq {
     }
 }
 
+pub type Bytes = [u8; 16];
+
 #[derive(Debug)]
-pub struct Uuid {
-    pub bytes: [u8; 16],
-}
+pub struct Uuid(Bytes);
 
 impl Uuid {
     pub fn v1() -> Layout {
@@ -168,6 +197,50 @@ impl Uuid {
     }
 }
 
+impl fmt::LowerHex for Uuid {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let bytes = (self.0[0] as u128) << 120
+            | (self.0[1] as u128) << 112
+            | (self.0[2] as u128) << 104
+            | (self.0[3] as u128) << 96
+            | (self.0[4] as u128) << 88
+            | (self.0[5] as u128) << 80
+            | (self.0[6] as u128) << 72
+            | (self.0[7] as u128) << 64
+            | (self.0[8] as u128) << 56
+            | (self.0[9] as u128) << 48
+            | (self.0[10] as u128) << 40
+            | (self.0[11] as u128) << 32
+            | (self.0[12] as u128) << 24
+            | (self.0[13] as u128) << 16
+            | (self.0[14] as u128) << 8
+            | (self.0[15] as u128);
+        fmt::LowerHex::fmt(&bytes, fmt)
+    }
+}
+
+impl fmt::UpperHex for Uuid {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let bytes = (self.0[0] as u128) << 120
+            | (self.0[1] as u128) << 112
+            | (self.0[2] as u128) << 104
+            | (self.0[3] as u128) << 96
+            | (self.0[4] as u128) << 88
+            | (self.0[5] as u128) << 80
+            | (self.0[6] as u128) << 72
+            | (self.0[7] as u128) << 64
+            | (self.0[8] as u128) << 56
+            | (self.0[9] as u128) << 48
+            | (self.0[10] as u128) << 40
+            | (self.0[11] as u128) << 32
+            | (self.0[12] as u128) << 24
+            | (self.0[13] as u128) << 16
+            | (self.0[14] as u128) << 8
+            | (self.0[15] as u128);
+        fmt::UpperHex::fmt(&bytes, fmt)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -175,13 +248,17 @@ mod tests {
     #[test]
     fn test_v1() {
         let uuid = Uuid::v1();
+
         assert_eq!(uuid.version(), Some(Version::TIME));
         assert_eq!(uuid.variant(), Some(Variant::RFC));
+
+        assert!(Uuid::is_valid(&format!("{}", uuid)));
     }
 
     #[test]
-    fn test_node_hex() {
+    fn test_node() {
         let node = Node([121, 42, 53, 13, 19, 34]);
+        assert_eq!(format!("{}", node), "79-2a-35-0d-13-22");
         assert_eq!(format!("{:x}", node), "792a350d1322");
         assert_eq!(format!("{:X}", node), "792A350D1322")
     }
