@@ -137,25 +137,21 @@ impl fmt::Display for Node {
 
 impl fmt::LowerHex for Node {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let n = (self.0[0] as u128) << 40
-            | (self.0[1] as u128) << 32
-            | (self.0[2] as u128) << 24
-            | (self.0[3] as u128) << 16
-            | (self.0[4] as u128) << 8
-            | (self.0[5] as u128);
-        fmt::LowerHex::fmt(&n, fmt)
+        write!(
+            fmt,
+            "{:02x}-{:02x}-{:02x}-{:02x}-{:02x}-{:02x}",
+            self.0[0], self.0[1], self.0[2], self.0[3], self.0[4], self.0[5],
+        )
     }
 }
 
 impl fmt::UpperHex for Node {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let n = (self.0[0] as u64) << 40
-            | (self.0[1] as u64) << 32
-            | (self.0[2] as u64) << 24
-            | (self.0[3] as u64) << 16
-            | (self.0[4] as u64) << 8
-            | (self.0[5] as u64);
-        fmt::UpperHex::fmt(&n, fmt)
+        write!(
+            fmt,
+            "{:02X}-{:02X}-{:02X}-{:02X}-{:02X}-{:02X}",
+            self.0[0], self.0[1], self.0[2], self.0[3], self.0[4], self.0[5],
+        )
     }
 }
 
@@ -259,8 +255,8 @@ mod tests {
     fn test_node() {
         let node = Node([121, 42, 53, 13, 19, 34]);
         assert_eq!(format!("{}", node), "79-2a-35-0d-13-22");
-        assert_eq!(format!("{:x}", node), "792a350d1322");
-        assert_eq!(format!("{:X}", node), "792A350D1322")
+        assert_eq!(format!("{:x}", node), "79-2a-35-0d-13-22");
+        assert_eq!(format!("{:X}", node), "79-2A-35-0D-13-22")
     }
 
     #[test]
