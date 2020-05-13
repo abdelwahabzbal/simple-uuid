@@ -193,47 +193,78 @@ impl Uuid {
     }
 }
 
+impl fmt::Display for Uuid {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            fmt,
+            "{:02x}{:02x}{:02x}{:02x}-{:02x}{:02x}-{:02x}{:02x}-{:02x}{:02x}-{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}",
+            self.0[0],
+            self.0[1],
+            self.0[2],
+            self.0[3],
+            self.0[4],
+            self.0[5],
+            self.0[6],
+            self.0[7],
+            self.0[8],
+            self.0[9],
+            self.0[10],
+            self.0[11],
+            self.0[12],
+            self.0[13],
+            self.0[14],
+            self.0[15],
+        )
+    }
+}
+
 impl fmt::LowerHex for Uuid {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let bytes = (self.0[0] as u128) << 120
-            | (self.0[1] as u128) << 112
-            | (self.0[2] as u128) << 104
-            | (self.0[3] as u128) << 96
-            | (self.0[4] as u128) << 88
-            | (self.0[5] as u128) << 80
-            | (self.0[6] as u128) << 72
-            | (self.0[7] as u128) << 64
-            | (self.0[8] as u128) << 56
-            | (self.0[9] as u128) << 48
-            | (self.0[10] as u128) << 40
-            | (self.0[11] as u128) << 32
-            | (self.0[12] as u128) << 24
-            | (self.0[13] as u128) << 16
-            | (self.0[14] as u128) << 8
-            | (self.0[15] as u128);
-        fmt::LowerHex::fmt(&bytes, fmt)
+        write!(
+            fmt,
+            "{:02x}{:02x}{:02x}{:02x}-{:02x}{:02x}-{:02x}{:02x}-{:02x}{:02x}-{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}",
+            self.0[0],
+            self.0[1],
+            self.0[2],
+            self.0[3],
+            self.0[4],
+            self.0[5],
+            self.0[6],
+            self.0[7],
+            self.0[8],
+            self.0[9],
+            self.0[10],
+            self.0[11],
+            self.0[12],
+            self.0[13],
+            self.0[14],
+            self.0[15],
+        )
     }
 }
 
 impl fmt::UpperHex for Uuid {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let bytes = (self.0[0] as u128) << 120
-            | (self.0[1] as u128) << 112
-            | (self.0[2] as u128) << 104
-            | (self.0[3] as u128) << 96
-            | (self.0[4] as u128) << 88
-            | (self.0[5] as u128) << 80
-            | (self.0[6] as u128) << 72
-            | (self.0[7] as u128) << 64
-            | (self.0[8] as u128) << 56
-            | (self.0[9] as u128) << 48
-            | (self.0[10] as u128) << 40
-            | (self.0[11] as u128) << 32
-            | (self.0[12] as u128) << 24
-            | (self.0[13] as u128) << 16
-            | (self.0[14] as u128) << 8
-            | (self.0[15] as u128);
-        fmt::UpperHex::fmt(&bytes, fmt)
+        write!(
+            fmt,
+            "{:02X}{:02X}{:02X}{:02X}-{:02X}{:02X}-{:02X}{:02X}-{:02X}{:02X}-{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}",
+            self.0[0],
+            self.0[1],
+            self.0[2],
+            self.0[3],
+            self.0[4],
+            self.0[5],
+            self.0[6],
+            self.0[7],
+            self.0[8],
+            self.0[9],
+            self.0[10],
+            self.0[11],
+            self.0[12],
+            self.0[13],
+            self.0[14],
+            self.0[15],
+        )
     }
 }
 
