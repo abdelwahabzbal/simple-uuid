@@ -19,12 +19,12 @@ pub enum Format {
 
 #[derive(Debug)]
 pub struct Layout {
-    time_low: u32,
-    time_mid: u16,
-    time_high_and_version: u16,
-    clock_seq_high_and_reserved: u8,
-    clock_seq_low: u8,
-    node: Id,
+    pub time_low: u32,
+    pub time_mid: u16,
+    pub time_high_and_version: u16,
+    pub clock_seq_high_and_reserved: u8,
+    pub clock_seq_low: u8,
+    pub node: Id,
 }
 
 impl Layout {
@@ -64,7 +64,14 @@ impl Layout {
         ])
     }
 
-    pub fn version(&self) -> Option<Version> {
+    pub fn get_time(&self) -> Timestamp {
+        let low = self.time_low as u64;
+        let mid = (self.time_mid as u64) << 32;
+        let high = (self.time_high_and_version as u64 ^ (Version::TIME as u64) << 12) << 48;
+        Timestamp(high | mid | low)
+    }
+
+    pub fn get_version(&self) -> Option<Version> {
         match (self.time_high_and_version >> 12) & 0xf {
             0x01 => Some(Version::TIME),
             0x02 => Some(Version::DCE),
@@ -75,7 +82,7 @@ impl Layout {
         }
     }
 
-    pub fn variant(&self) -> Option<Variant> {
+    pub fn get_variant(&self) -> Option<Variant> {
         match (self.clock_seq_high_and_reserved >> 4) & 0xf {
             0x00 => Some(Variant::NCS),
             0x01 => Some(Variant::RFC),
@@ -86,36 +93,21 @@ impl Layout {
     }
 }
 
-impl fmt::LowerHex for Layout {
-    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            fmt,
-            "{:02x}-{:02x}-{:02x}-{:02x}-{:02x}",
-            self.as_fields().0,
-            self.as_fields().1,
-            self.as_fields().2,
-            self.as_fields().3,
-            self.as_fields().4,
-        )
-    }
-}
+#[derive(Debug)]
+pub struct Timestamp(u64);
 
-impl fmt::UpperHex for Layout {
-    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            fmt,
-            "{:02x}-{:02x}-{:02x}-{:02x}-{:02x}",
-            self.as_fields().0,
-            self.as_fields().1,
-            self.as_fields().2,
-            self.as_fields().3,
-            self.as_fields().4,
-        )
-    }
-}
+impl Timestamp {
+    pub fn new() -> u64 {
+        let utc = SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .unwrap()
+            .checked_add(std::time::Duration::from_secs(12219293532))
+            .unwrap()
+            .as_nanos()
+            * 100;
 
-pub struct Timestamp {
-    pub tick: u64,
+        (utc & 0xffff_ffff_ffff_fff) as u64
+    }
 }
 
 #[derive(Debug, Eq, PartialEq)]
@@ -138,16 +130,6 @@ pub enum Version {
 pub type Id = [u8; 6];
 
 pub struct Node(Id);
-
-impl fmt::Display for Node {
-    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            fmt,
-            "{:02x}-{:02x}-{:02x}-{:02x}-{:02x}-{:02x}",
-            self.0[0], self.0[1], self.0[2], self.0[3], self.0[4], self.0[5],
-        )
-    }
-}
 
 impl fmt::LowerHex for Node {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -174,7 +156,7 @@ pub struct ClockSeq(u16);
 
 impl ClockSeq {
     pub fn new(r: u16) -> u16 {
-        atomic::AtomicU16::new(r).fetch_add(1, atomic::Ordering::AcqRel)
+        atomic::AtomicU16::new(r).fetch_add(1, atomic::Ordering::SeqCst)
     }
 }
 
@@ -185,8 +167,7 @@ pub struct Uuid(Bytes);
 
 impl Uuid {
     pub fn v1() -> Layout {
-        let tick = SystemTime::now().elapsed().unwrap();
-        let utc = ((tick.as_nanos() & 0xffff_ffff_ffff_ffff) as u64) + NANO_TICKS_BETWEEN_EPOCHS;
+        let utc = Timestamp::new();
         let clock_seq = ClockSeq::new(rand::random::<u16>());
 
         Layout {
@@ -201,7 +182,7 @@ impl Uuid {
 
     pub fn is_valid(s: &str) -> bool {
         let regex = Regex::new(
-            r"^(?i)(urn:uuid:)?[0-9a-f]{8}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{12}$",
+            r"^(?i)(urn:uuid:)?[0-9a-f]{8}\-[0-9a-f]{4}\-[0-5]{1}[0-9a-f]{3}\-[0-9a-f]{4}\-[0-9a-f]{12}$",
         );
         regex.unwrap().is_match(s)
     }
@@ -265,11 +246,8 @@ mod tests {
     fn test_v1() {
         let uuid = Uuid::v1();
 
-        assert_eq!(uuid.version(), Some(Version::TIME));
-        assert_eq!(uuid.variant(), Some(Variant::RFC));
-
-        assert!(Uuid::is_valid(&format!("{:x}", uuid)));
-        assert!(Uuid::is_valid(&format!("{:X}", uuid)));
+        assert_eq!(uuid.get_version(), Some(Version::TIME));
+        assert_eq!(uuid.get_variant(), Some(Variant::RFC));
 
         assert!(Uuid::is_valid(&format!("{:x}", uuid.as_bytes())));
         assert!(Uuid::is_valid(&format!("{:X}", uuid.as_bytes())));
@@ -277,10 +255,9 @@ mod tests {
 
     #[test]
     fn test_node() {
-        let node = Node([121, 42, 53, 13, 19, 34]);
-        assert_eq!(format!("{}", node), "79-2a-35-0d-13-22");
-        assert_eq!(format!("{:x}", node), "79-2a-35-0d-13-22");
-        assert_eq!(format!("{:X}", node), "79-2A-35-0D-13-22")
+        let node = Node([00, 42, 53, 13, 19, 128]);
+        assert_eq!(format!("{:x}", node), "00-2a-35-0d-13-80");
+        assert_eq!(format!("{:X}", node), "00-2A-35-0D-13-80")
     }
 
     #[test]
