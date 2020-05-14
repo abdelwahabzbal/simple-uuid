@@ -5,7 +5,7 @@ use mac_address::get_mac_address;
 use rand;
 use regex::Regex;
 
-pub const NANO_BETWEEN_EPOCHS: u64 = 0x1B21_DD21_3814_000;
+pub const NANO_UTC_EPOCH: u64 = 0x1B21_DD21_3814_000;
 
 #[derive(Debug)]
 pub enum Format {
@@ -101,7 +101,7 @@ impl Timestamp {
         let utc = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
-            .checked_add(std::time::Duration::from_nanos(NANO_BETWEEN_EPOCHS))
+            .checked_add(std::time::Duration::from_nanos(NANO_UTC_EPOCH))
             .unwrap()
             .as_nanos();
 
