@@ -5,7 +5,7 @@ use mac_address::get_mac_address;
 use rand;
 use regex::Regex;
 
-pub const NANO_TICKS_BETWEEN_EPOCHS: u64 = 0x01B2_1DD2_1381_4000;
+pub const NANO_BETWEEN_EPOCHS: u64 = 0x1B21_DD21_3814_000;
 
 #[derive(Debug)]
 pub enum Format {
@@ -101,10 +101,9 @@ impl Timestamp {
         let utc = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
-            .checked_add(std::time::Duration::from_secs(12219293532))
+            .checked_add(std::time::Duration::from_nanos(NANO_BETWEEN_EPOCHS))
             .unwrap()
-            .as_nanos()
-            * 100;
+            .as_nanos();
 
         (utc & 0xffff_ffff_ffff_fff) as u64
     }
@@ -282,6 +281,8 @@ mod tests {
             "URN:UUID:0C0BF838-9388-11EA-BB37-0242AC130002_INVALID",
             "0c0bf838-9388-11ea-bb37-0242ac130002_invalid",
             "0C0BF838-9388-11EA-BB37-0242AC130002_INVALID",
+            "0c0bf838-9388-91ea-bb37-0242ac130002",
+            "0C0BF838-9388-71EA-BB37-0242AC130002",
         ];
 
         for id in uuid.iter() {
