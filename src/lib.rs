@@ -126,6 +126,12 @@ pub enum Version {
     SHA1,
 }
 
+pub enum Domain {
+    PERSON = 0,
+    GROUP,
+    ORG,
+}
+
 pub type Id = [u8; 6];
 
 pub struct Node(Id);
@@ -175,6 +181,21 @@ impl Uuid {
             time_high_and_version: (utc >> 48 & 0xfff) as u16 | (Version::TIME as u16) << 12,
             clock_seq_high_and_reserved: ((clock_seq >> 8) & 0xf) as u8 | (Variant::RFC as u8) << 4,
             clock_seq_low: (clock_seq & 0xff) as u8,
+            node: get_mac_address().unwrap().unwrap().bytes(),
+        }
+    }
+
+    pub fn v2(domain: Domain) -> Layout {
+        let utc = Timestamp::new();
+        let clock_seq = ClockSeq::new(rand::random::<u16>());
+        let local_id = ((utc & 0xffff_ffff) as u32) | 1000;
+
+        Layout {
+            time_low: local_id,
+            time_mid: ((utc >> 32 & 0xffff) as u16),
+            time_high_and_version: (utc >> 48 & 0xfff) as u16 | (Version::DCE as u16) << 12,
+            clock_seq_high_and_reserved: ((clock_seq >> 8) & 0xf) as u8 | (Variant::RFC as u8) << 4,
+            clock_seq_low: domain as u8,
             node: get_mac_address().unwrap().unwrap().bytes(),
         }
     }
@@ -246,6 +267,17 @@ mod tests {
         let uuid = Uuid::v1();
 
         assert_eq!(uuid.get_version(), Some(Version::TIME));
+        assert_eq!(uuid.get_variant(), Some(Variant::RFC));
+
+        assert!(Uuid::is_valid(&format!("{:x}", uuid.as_bytes())));
+        assert!(Uuid::is_valid(&format!("{:X}", uuid.as_bytes())));
+    }
+
+    #[test]
+    fn test_v2() {
+        let uuid = Uuid::v2(Domain::PERSON);
+
+        assert_eq!(uuid.get_version(), Some(Version::DCE));
         assert_eq!(uuid.get_variant(), Some(Variant::RFC));
 
         assert!(Uuid::is_valid(&format!("{:x}", uuid.as_bytes())));
