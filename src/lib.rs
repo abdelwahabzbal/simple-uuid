@@ -24,7 +24,7 @@ pub struct Layout {
     pub time_high_and_version: u16,
     pub clock_seq_high_and_reserved: u8,
     pub clock_seq_low: u8,
-    pub node: Id,
+    pub node: [u8; 6],
 }
 
 impl Layout {
@@ -64,13 +64,6 @@ impl Layout {
         ])
     }
 
-    pub fn get_time(&self) -> Timestamp {
-        let low = self.time_low as u64;
-        let mid = (self.time_mid as u64) << 32;
-        let high = (self.time_high_and_version as u64 ^ (Version::TIME as u64) << 12) << 48;
-        Timestamp(high | mid | low)
-    }
-
     pub fn get_version(&self) -> Option<Version> {
         match (self.time_high_and_version >> 12) & 0xf {
             0x01 => Some(Version::TIME),
@@ -98,14 +91,14 @@ pub struct Timestamp(u64);
 
 impl Timestamp {
     pub fn new() -> u64 {
-        let utc = SystemTime::now()
+        let t = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
             .checked_add(std::time::Duration::from_nanos(NANO_UTC_EPOCH))
             .unwrap()
             .as_nanos();
 
-        (utc & 0xffff_ffff_ffff_fff) as u64
+        (t & 0xffff_ffff_ffff_ffff) as u64
     }
 }
 
@@ -132,9 +125,7 @@ pub enum Domain {
     ORG,
 }
 
-pub type Id = [u8; 6];
-
-pub struct Node(Id);
+pub struct Node([u8; 6]);
 
 impl fmt::LowerHex for Node {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -165,10 +156,8 @@ impl ClockSeq {
     }
 }
 
-pub type Bytes = [u8; 16];
-
 #[derive(Debug)]
-pub struct Uuid(Bytes);
+pub struct Uuid([u8; 16]);
 
 impl Uuid {
     pub fn v1() -> Layout {
@@ -285,23 +274,26 @@ mod tests {
     }
 
     #[test]
-    fn test_node() {
-        let node = Node([00, 42, 53, 13, 19, 128]);
-        assert_eq!(format!("{:x}", node), "00-2a-35-0d-13-80");
-        assert_eq!(format!("{:X}", node), "00-2A-35-0D-13-80")
-    }
-
-    #[test]
     fn test_valid_uuid() {
         let uuid = [
             "urn:uuid:7370554e-8a0c-11ea-bc55-0242ac130003",
-            "URN:UUID:0C0BF838-9388-11EA-BB37-0242AC130002",
             "0c0bf838-9388-11ea-bb37-0242ac130002",
-            "0C0BF838-9388-11EA-BB37-0242AC130002",
         ];
 
         for id in uuid.iter() {
             assert!(Uuid::is_valid(id))
+        }
+    }
+
+    #[test]
+    fn test_valid_upper_uuid() {
+        let uuid = [
+            "urn:uuid:7370554e-8a0c-11ea-bc55-0242ac130003",
+            "0c0bf838-9388-11ea-bb37-0242ac130002",
+        ];
+
+        for id in uuid.iter() {
+            assert!(Uuid::is_valid(&id.to_ascii_uppercase()))
         }
     }
 
@@ -310,15 +302,19 @@ mod tests {
     fn test_invalid_uuid() {
         let uuid = [
             "urn:uuid:7370554e-8a0c-11ea-bc55-0242ac130003_invalid",
-            "URN:UUID:0C0BF838-9388-11EA-BB37-0242AC130002_INVALID",
             "0c0bf838-9388-11ea-bb37-0242ac130002_invalid",
-            "0C0BF838-9388-11EA-BB37-0242AC130002_INVALID",
-            "0c0bf838-9388-91ea-bb37-0242ac130002",
-            "0C0BF838-9388-71EA-BB37-0242AC130002",
+            "0c0bf838-9388-61ea-bb37-0242ac130002", // version out of range
         ];
 
         for id in uuid.iter() {
             assert!(Uuid::is_valid(id))
         }
+    }
+
+    #[test]
+    fn test_node() {
+        let node = Node([00, 42, 53, 13, 19, 128]);
+        assert_eq!(format!("{:x}", node), "00-2a-35-0d-13-80");
+        assert_eq!(format!("{:X}", node), "00-2A-35-0D-13-80")
     }
 }
