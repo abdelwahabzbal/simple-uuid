@@ -1,7 +1,8 @@
-use mac_address::get_mac_address;
+use mac_address;
 use md5;
 use rand;
 use regex::Regex;
+use sha1::Sha1;
 
 use core::{fmt, str, sync::atomic};
 use std::time::{self, SystemTime};
@@ -206,7 +207,7 @@ impl Uuid {
             time_high_and_version: (utc >> 48 & 0xfff) as u16 | (Version::TIME as u16) << 12,
             clock_seq_high_and_reserved: ((clock_seq >> 8) & 0xf) as u8 | (Variant::RFC as u8) << 4,
             clock_seq_low: (clock_seq & 0xff) as u8,
-            node: get_mac_address().unwrap().unwrap().bytes(),
+            node: mac_address::get_mac_address().unwrap().unwrap().bytes(),
         }
     }
 
@@ -221,7 +222,7 @@ impl Uuid {
             time_high_and_version: (utc >> 48 & 0xfff) as u16 | (Version::DCE as u16) << 12,
             clock_seq_high_and_reserved: ((clock_seq >> 8) & 0xf) as u8 | (Variant::RFC as u8) << 4,
             clock_seq_low: domain as u8,
-            node: get_mac_address().unwrap().unwrap().bytes(),
+            node: mac_address::get_mac_address().unwrap().unwrap().bytes(),
         }
     }
 
@@ -237,6 +238,42 @@ impl Uuid {
             time_mid: (hash[4] as u16) << 8 | (hash[5] as u16),
             time_high_and_version: ((hash[6] as u16) << 8 | (hash[7] as u16)) & 0xfff
                 | (Version::MD5 as u16) << 12,
+            clock_seq_high_and_reserved: (hash[8] & 0xf) | (Variant::RFC as u8) << 4,
+            clock_seq_low: hash[9] as u8,
+            node: [hash[10], hash[11], hash[12], hash[13], hash[14], hash[15]],
+        }
+    }
+
+    pub fn v4() -> Layout {
+        let rng = rand::random::<u128>();
+        let rand = rng.to_be_bytes();
+
+        Layout {
+            time_low: ((rand[0] as u32) << 24)
+                | (rand[1] as u32) << 16
+                | (rand[2] as u32) << 8
+                | rand[3] as u32,
+            time_mid: (rand[4] as u16) << 8 | (rand[5] as u16),
+            time_high_and_version: ((rand[6] as u16) << 8 | (rand[7] as u16)) & 0xfff
+                | (Version::RAND as u16) << 12,
+            clock_seq_high_and_reserved: (rand[8] & 0xf) | (Variant::RFC as u8) << 4,
+            clock_seq_low: rand[9] as u8,
+            node: [rand[10], rand[11], rand[12], rand[13], rand[14], rand[15]],
+        }
+    }
+
+    pub fn v5(any: &str, nspace: Uuid) -> Layout {
+        let data = format!("{:x}", nspace) + any;
+        let hash = Sha1::from(&data).digest().bytes();
+
+        Layout {
+            time_low: ((hash[0] as u32) << 24)
+                | (hash[1] as u32) << 16
+                | (hash[2] as u32) << 8
+                | hash[3] as u32,
+            time_mid: (hash[4] as u16) << 8 | (hash[5] as u16),
+            time_high_and_version: ((hash[6] as u16) << 8 | (hash[7] as u16)) & 0xfff
+                | (Version::SHA1 as u16) << 12,
             clock_seq_high_and_reserved: (hash[8] & 0xf) | (Variant::RFC as u8) << 4,
             clock_seq_low: hash[9] as u8,
             node: [hash[10], hash[11], hash[12], hash[13], hash[14], hash[15]],
@@ -332,6 +369,28 @@ mod tests {
         let uuid = Uuid::v3("any", Uuid::NAMESPACE_X500);
 
         assert_eq!(uuid.get_version(), Some(Version::MD5));
+        assert_eq!(uuid.get_variant(), Some(Variant::RFC));
+
+        assert!(Uuid::is_valid(&format!("{:x}", uuid.as_bytes())));
+        assert!(Uuid::is_valid(&format!("{:X}", uuid.as_bytes())));
+    }
+
+    #[test]
+    fn test_v4() {
+        let uuid = Uuid::v4();
+
+        assert_eq!(uuid.get_version(), Some(Version::RAND));
+        assert_eq!(uuid.get_variant(), Some(Variant::RFC));
+
+        assert!(Uuid::is_valid(&format!("{:x}", uuid.as_bytes())));
+        assert!(Uuid::is_valid(&format!("{:X}", uuid.as_bytes())));
+    }
+
+    #[test]
+    fn test_v5() {
+        let uuid = Uuid::v5("any", Uuid::NAMESPACE_X500);
+
+        assert_eq!(uuid.get_version(), Some(Version::SHA1));
         assert_eq!(uuid.get_variant(), Some(Variant::RFC));
 
         assert!(Uuid::is_valid(&format!("{:x}", uuid.as_bytes())));
