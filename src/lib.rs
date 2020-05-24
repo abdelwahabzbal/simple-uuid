@@ -1,5 +1,5 @@
 use core::{fmt, str, sync::atomic};
-use std::time::SystemTime;
+use std::time::{self, SystemTime};
 
 use mac_address::get_mac_address;
 use rand;
@@ -84,6 +84,13 @@ impl Layout {
             _ => None,
         }
     }
+
+    pub fn get_time(&self) -> Timestamp {
+        let time = (self.time_high_and_version as u64 & 0xfff) << 48
+            | (self.time_mid as u64) << 32
+            | self.time_low as u64;
+        Timestamp(time)
+    }
 }
 
 #[derive(Debug)]
@@ -91,14 +98,18 @@ pub struct Timestamp(u64);
 
 impl Timestamp {
     pub fn new() -> u64 {
-        let t = SystemTime::now()
+        let nano = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
             .checked_add(std::time::Duration::from_nanos(NANO_UTC_EPOCH))
             .unwrap()
             .as_nanos();
 
-        (t & 0xffff_ffff_ffff_ffff) as u64
+        (nano & 0xffff_ffff_ffff_ffff) as u64
+    }
+
+    pub fn duration(&self) -> time::Duration {
+        time::Duration::from_nanos(self.0)
     }
 }
 
@@ -303,7 +314,7 @@ mod tests {
         let uuid = [
             "urn:uuid:7370554e-8a0c-11ea-bc55-0242ac130003_invalid",
             "0c0bf838-9388-11ea-bb37-0242ac130002_invalid",
-            "0c0bf838-9388-61ea-bb37-0242ac130002", // version out of range
+            "0c0bf838-9388-61ea-bb37-0242ac130002", // invalid version
         ];
 
         for id in uuid.iter() {
