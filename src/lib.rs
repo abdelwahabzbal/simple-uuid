@@ -1,10 +1,10 @@
-use core::{fmt, str, sync::atomic};
-use std::time::{self, SystemTime};
-
 use mac_address::get_mac_address;
 use md5;
 use rand;
 use regex::Regex;
+
+use core::{fmt, str, sync::atomic};
+use std::time::{self, SystemTime};
 
 pub const NANO_UTC_EPOCH: u64 = 0x1B21_DD21_3814_000;
 
