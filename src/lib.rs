@@ -2,6 +2,7 @@ use core::{fmt, str, sync::atomic};
 use std::time::{self, SystemTime};
 
 use mac_address::get_mac_address;
+use md5;
 use rand;
 use regex::Regex;
 
@@ -171,6 +172,30 @@ impl ClockSeq {
 pub struct Uuid([u8; 16]);
 
 impl Uuid {
+    /// UUID namespace for Domain Name System (DNS).
+    pub const NAMESPACE_DNS: Self = Uuid([
+        0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30,
+        0xc8,
+    ]);
+
+    /// UUID namespace for ISO Object Identifiers (OIDs).
+    pub const NAMESPACE_OID: Self = Uuid([
+        0x6b, 0xa7, 0xb8, 0x12, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30,
+        0xc8,
+    ]);
+
+    /// UUID namespace for Uniform Resource Locators (URLs).
+    pub const NAMESPACE_URL: Self = Uuid([
+        0x6b, 0xa7, 0xb8, 0x11, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30,
+        0xc8,
+    ]);
+
+    /// UUID namespace for X.500 Distinguished Names (DNs).
+    pub const NAMESPACE_X500: Self = Uuid([
+        0x6b, 0xa7, 0xb8, 0x14, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30,
+        0xc8,
+    ]);
+
     pub fn v1() -> Layout {
         let utc = Timestamp::new();
         let clock_seq = ClockSeq::new(rand::random::<u16>());
@@ -197,6 +222,24 @@ impl Uuid {
             clock_seq_high_and_reserved: ((clock_seq >> 8) & 0xf) as u8 | (Variant::RFC as u8) << 4,
             clock_seq_low: domain as u8,
             node: get_mac_address().unwrap().unwrap().bytes(),
+        }
+    }
+
+    pub fn v3(any: &str, nspace: Uuid) -> Layout {
+        let data = format!("{:x}", nspace) + any;
+        let hash = md5::compute(&data).0;
+
+        Layout {
+            time_low: ((hash[0] as u32) << 24)
+                | (hash[1] as u32) << 16
+                | (hash[2] as u32) << 8
+                | hash[3] as u32,
+            time_mid: (hash[4] as u16) << 8 | (hash[5] as u16),
+            time_high_and_version: ((hash[6] as u16) << 8 | (hash[7] as u16)) & 0xfff
+                | (Version::MD5 as u16) << 12,
+            clock_seq_high_and_reserved: (hash[8] & 0xf) | (Variant::RFC as u8) << 4,
+            clock_seq_low: hash[9] as u8,
+            node: [hash[10], hash[11], hash[12], hash[13], hash[14], hash[15]],
         }
     }
 
@@ -278,6 +321,17 @@ mod tests {
         let uuid = Uuid::v2(Domain::PERSON);
 
         assert_eq!(uuid.get_version(), Some(Version::DCE));
+        assert_eq!(uuid.get_variant(), Some(Variant::RFC));
+
+        assert!(Uuid::is_valid(&format!("{:x}", uuid.as_bytes())));
+        assert!(Uuid::is_valid(&format!("{:X}", uuid.as_bytes())));
+    }
+
+    #[test]
+    fn test_v3() {
+        let uuid = Uuid::v3("any", Uuid::NAMESPACE_X500);
+
+        assert_eq!(uuid.get_version(), Some(Version::MD5));
         assert_eq!(uuid.get_variant(), Some(Variant::RFC));
 
         assert!(Uuid::is_valid(&format!("{:x}", uuid.as_bytes())));
