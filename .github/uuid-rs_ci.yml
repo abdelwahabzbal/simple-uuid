@@ -1,4 +1,4 @@
-name: Rust
+name: uuid-rs
 
 on:
   push:
