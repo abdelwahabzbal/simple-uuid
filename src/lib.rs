@@ -1,13 +1,11 @@
-use mac_address;
-use md5;
 use rand;
 use regex::Regex;
-use sha1::Sha1;
 
-use core::{fmt, str, sync::atomic};
-use std::time::{self, SystemTime};
+use core::fmt;
+use core::str;
 
-pub const NANO_UTC_EPOCH: u64 = 0x1B21_DD21_3814_000;
+pub mod name;
+pub mod times;
 
 #[derive(Debug)]
 pub enum Format {
@@ -87,31 +85,11 @@ impl Layout {
         }
     }
 
-    pub fn get_time(&self) -> Timestamp {
+    pub fn get_time(&self) -> times::Timestamp {
         let time = (self.time_high_and_version as u64 & 0xfff) << 48
             | (self.time_mid as u64) << 32
             | self.time_low as u64;
-        Timestamp(time)
-    }
-}
-
-#[derive(Debug)]
-pub struct Timestamp(u64);
-
-impl Timestamp {
-    pub fn new() -> u64 {
-        let nano = SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap()
-            .checked_add(std::time::Duration::from_nanos(NANO_UTC_EPOCH))
-            .unwrap()
-            .as_nanos();
-
-        (nano & 0xffff_ffff_ffff_ffff) as u64
-    }
-
-    pub fn duration(&self) -> time::Duration {
-        time::Duration::from_nanos(self.0)
+        times::Timestamp(time)
     }
 }
 
@@ -130,43 +108,6 @@ pub enum Version {
     MD5,
     RAND,
     SHA1,
-}
-
-pub enum Domain {
-    PERSON = 0,
-    GROUP,
-    ORG,
-}
-
-pub struct Node([u8; 6]);
-
-impl fmt::LowerHex for Node {
-    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            fmt,
-            "{:02x}-{:02x}-{:02x}-{:02x}-{:02x}-{:02x}",
-            self.0[0], self.0[1], self.0[2], self.0[3], self.0[4], self.0[5],
-        )
-    }
-}
-
-impl fmt::UpperHex for Node {
-    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            fmt,
-            "{:02X}-{:02X}-{:02X}-{:02X}-{:02X}-{:02X}",
-            self.0[0], self.0[1], self.0[2], self.0[3], self.0[4], self.0[5],
-        )
-    }
-}
-
-#[derive(Clone, Copy)]
-pub struct ClockSeq(u16);
-
-impl ClockSeq {
-    pub fn new(r: u16) -> u16 {
-        atomic::AtomicU16::new(r).fetch_add(1, atomic::Ordering::SeqCst)
-    }
 }
 
 #[derive(Debug)]
@@ -197,53 +138,6 @@ impl Uuid {
         0xc8,
     ]);
 
-    pub fn v1() -> Layout {
-        let utc = Timestamp::new();
-        let clock_seq = ClockSeq::new(rand::random::<u16>());
-
-        Layout {
-            time_low: ((utc & 0xffff_ffff) as u32),
-            time_mid: ((utc >> 32 & 0xffff) as u16),
-            time_high_and_version: (utc >> 48 & 0xfff) as u16 | (Version::TIME as u16) << 12,
-            clock_seq_high_and_reserved: ((clock_seq >> 8) & 0xf) as u8 | (Variant::RFC as u8) << 4,
-            clock_seq_low: (clock_seq & 0xff) as u8,
-            node: mac_address::get_mac_address().unwrap().unwrap().bytes(),
-        }
-    }
-
-    pub fn v2(domain: Domain) -> Layout {
-        let utc = Timestamp::new();
-        let clock_seq = ClockSeq::new(rand::random::<u16>());
-        let local_id = ((utc & 0xffff_ffff) as u32) | 1000;
-
-        Layout {
-            time_low: local_id,
-            time_mid: ((utc >> 32 & 0xffff) as u16),
-            time_high_and_version: (utc >> 48 & 0xfff) as u16 | (Version::DCE as u16) << 12,
-            clock_seq_high_and_reserved: ((clock_seq >> 8) & 0xf) as u8 | (Variant::RFC as u8) << 4,
-            clock_seq_low: domain as u8,
-            node: mac_address::get_mac_address().unwrap().unwrap().bytes(),
-        }
-    }
-
-    pub fn v3(any: &str, nspace: Uuid) -> Layout {
-        let data = format!("{:x}", nspace) + any;
-        let hash = md5::compute(&data).0;
-
-        Layout {
-            time_low: ((hash[0] as u32) << 24)
-                | (hash[1] as u32) << 16
-                | (hash[2] as u32) << 8
-                | hash[3] as u32,
-            time_mid: (hash[4] as u16) << 8 | (hash[5] as u16),
-            time_high_and_version: ((hash[6] as u16) << 8 | (hash[7] as u16)) & 0xfff
-                | (Version::MD5 as u16) << 12,
-            clock_seq_high_and_reserved: (hash[8] & 0xf) | (Variant::RFC as u8) << 4,
-            clock_seq_low: hash[9] as u8,
-            node: [hash[10], hash[11], hash[12], hash[13], hash[14], hash[15]],
-        }
-    }
-
     pub fn v4() -> Layout {
         let rng = rand::random::<u128>();
         let rand = rng.to_be_bytes();
@@ -259,24 +153,6 @@ impl Uuid {
             clock_seq_high_and_reserved: (rand[8] & 0xf) | (Variant::RFC as u8) << 4,
             clock_seq_low: rand[9] as u8,
             node: [rand[10], rand[11], rand[12], rand[13], rand[14], rand[15]],
-        }
-    }
-
-    pub fn v5(any: &str, nspace: Uuid) -> Layout {
-        let data = format!("{:x}", nspace) + any;
-        let hash = Sha1::from(&data).digest().bytes();
-
-        Layout {
-            time_low: ((hash[0] as u32) << 24)
-                | (hash[1] as u32) << 16
-                | (hash[2] as u32) << 8
-                | hash[3] as u32,
-            time_mid: (hash[4] as u16) << 8 | (hash[5] as u16),
-            time_high_and_version: ((hash[6] as u16) << 8 | (hash[7] as u16)) & 0xfff
-                | (Version::SHA1 as u16) << 12,
-            clock_seq_high_and_reserved: (hash[8] & 0xf) | (Variant::RFC as u8) << 4,
-            clock_seq_low: hash[9] as u8,
-            node: [hash[10], hash[11], hash[12], hash[13], hash[14], hash[15]],
         }
     }
 
@@ -341,6 +217,7 @@ impl fmt::UpperHex for Uuid {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use times::*;
 
     #[test]
     fn test_v1() {

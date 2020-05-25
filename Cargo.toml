@@ -1,8 +1,18 @@
 [package]
-name = "uuid-rs"
+name = "myuuid-rs"
 authors = ["Awh6al <awh6al@yandex.com>"]
 version = "0.1.0"
+lisence = "MIT"
 edition = "2018"
+categories = [
+    "data-structures",
+]
+keywords = [
+    "uuid",
+    "unique",
+]
+description = "A Universally Unique IDentifier (UUID)"
+repository = "https://github.com/awh6al/uuid-rs"
 
 [dependencies]
 mac_address = "1.0.3"
