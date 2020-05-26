@@ -1,4 +1,4 @@
-name: uuid-rs
+name: uuid
 
 on:
   push:
@@ -18,15 +18,10 @@ jobs:
     - uses: actions-rs/toolchain@v1
       with:
         profile: minimal
-        toolchain: stable
-    - name: Run tests
-      run: cargo test --benches --verbose
-
-    steps:
-    - uses: actions/checkout@v2
+        toolchain: nightly
     - uses: actions-rs/toolchain@v1
       with:
         profile: minimal
-        toolchain: nightly
+        toolchain: stable
     - name: Run tests
       run: cargo test --benches --verbose
