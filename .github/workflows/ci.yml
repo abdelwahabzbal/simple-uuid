@@ -15,10 +15,19 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+
+    - uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        override: true
+    - name: Run tests
+      run: cargo test --verbose
+
     - uses: actions-rs/toolchain@v1
       with:
         profile: minimal
         toolchain: nightly
         override: true
-    - name: Run tests
-      run: cargo test --benches --verbose
+    - name: Run benches
+      run: cargo bench --verbose
