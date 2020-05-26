@@ -18,6 +18,15 @@ jobs:
     - uses: actions-rs/toolchain@v1
       with:
         profile: minimal
-        toolchain: [stable, nightly]
+        toolchain: stable
+    - name: Run tests
+      run: cargo test --benches --verbose
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: nightly
     - name: Run tests
       run: cargo test --benches --verbose
