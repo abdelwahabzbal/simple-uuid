@@ -1,4 +1,4 @@
-name: uuid
+name: uuid-rs
 
 on:
   push:
@@ -15,7 +15,5 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Run benches
-      run: cargo bench --verbose
     - name: Run tests
-      run: cargo test --verbose
+      run: cargo test --benches --verbose
