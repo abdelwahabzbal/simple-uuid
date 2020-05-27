@@ -14,6 +14,7 @@ keywords = [
 ]
 description = "A Universally Unique IDentifier (UUID)"
 repository = "https://github.com/awh6al/uuid-rs"
+documentation = "https://docs.rs/uuid-rs"
 
 [dependencies]
 mac_address = "1.0.3"
