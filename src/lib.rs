@@ -1,7 +1,10 @@
-/// This crate defines a Uniform Resource Name namespace for
-/// UUIDs (Universally Unique IDentifier), also known as GUIDs (Globally
-/// Unique IDentifier). A UUID is 128 bits long, and can guarantee
-/// uniqueness across space and time.
+//! This crate defines a Uniform Resource Name namespace for
+//! UUIDs (Universally Unique IDentifier), also known as GUIDs (Globally
+//! Unique IDentifier). A UUID is 128 bits long, and can guarantee
+//! uniqueness across space and time.
+
+#![doc(html_root_url = "https://docs.rs/uuid-rs/0.1.3")]
+
 use rand;
 use regex::Regex;
 
