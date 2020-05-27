@@ -1,3 +1,7 @@
+/// This crate defines a Uniform Resource Name namespace for
+/// UUIDs (Universally Unique IDentifier), also known as GUIDs (Globally
+/// Unique IDentifier). A UUID is 128 bits long, and can guarantee
+/// uniqueness across space and time.
 use rand;
 use regex::Regex;
 
@@ -7,6 +11,7 @@ use core::str;
 pub mod name;
 pub mod times;
 
+/// The formal definition of the UUID string representation.
 #[derive(Debug)]
 pub enum Format {
     Layout,
@@ -17,13 +22,20 @@ pub enum Format {
     Node,
 }
 
+/// The UUID format is 16 octets.
 #[derive(Debug)]
 pub struct Layout {
+    /// The low field of the Timestamp.
     pub time_low: u32,
+    /// The mid field of the Timestamp.
     pub time_mid: u16,
+    /// The high field of the Timestamp multiplexed with the version number.
     pub time_high_and_version: u16,
+    /// The high field of the ClockSeq multiplexed with the variant.
     pub clock_seq_high_and_reserved: u8,
+    /// The low field of the ClockSeq.
     pub clock_seq_low: u8,
+    /// IEEE 802 MAC address.
     pub node: [u8; 6],
 }
 
@@ -95,18 +107,27 @@ impl Layout {
 
 #[derive(Debug, Eq, PartialEq)]
 pub enum Variant {
+    /// Reserved, NCS backward compatibility.
     NCS = 0,
+    /// The variant specified in rfc4122 document.
     RFC,
+    /// Reserved, Microsoft Corporation backward compatibility.
     MS,
+    /// Reserved for future definition.
     FUT,
 }
 
 #[derive(Debug, Eq, PartialEq)]
 pub enum Version {
+    /// The time-based version specified in this document.
     TIME = 1,
+    /// DCE Security version, with embedded POSIX UIDs.
     DCE,
+    /// The name-based version specified in rfc4122 document that uses MD5 hashing.
     MD5,
+    /// The randomly or pseudo-randomly generated version specified in rfc4122 document.
     RAND,
+    /// The name-based version specified in rfc4122 document that uses SHA-1 hashing.
     SHA1,
 }
 
@@ -138,6 +159,7 @@ impl Uuid {
         0xc8,
     ]);
 
+    /// Generate a UUID from truly random numbers.
     pub fn v4() -> Layout {
         let rng = rand::random::<u128>();
         let rand = rng.to_be_bytes();

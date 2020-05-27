@@ -7,6 +7,7 @@ use crate::Variant;
 use crate::Version;
 
 impl Uuid {
+    /// Generate a UUID by hashing a namespace identifier and name uses MD5.
     pub fn v3(any: &str, ns: Uuid) -> Layout {
         let data = format!("{:x}", ns) + any;
         let hash = md5::compute(&data).0;
@@ -25,6 +26,7 @@ impl Uuid {
         }
     }
 
+    /// Generate a UUID by hashing a namespace identifier and name uses SHA1.
     pub fn v5(any: &str, nspace: Uuid) -> Layout {
         let data = format!("{:x}", nspace) + any;
         let hash = Sha1::from(&data).digest().bytes();

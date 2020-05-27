@@ -18,6 +18,7 @@ pub enum Domain {
 }
 
 impl Uuid {
+    /// Generate a time-based and MAC address UUID.
     pub fn v1() -> Layout {
         let utc = Timestamp::new();
         let clock_seq = ClockSeq::new(rand::random::<u16>());
@@ -32,6 +33,12 @@ impl Uuid {
         }
     }
 
+    /// Generate a time based, MAC address and DCE security version UUID.
+    ///
+    /// NOTE: RFC 4122 reserves version 2 for "DCE security" UUIDs;
+    /// but it does not provide any details.
+    ///
+    /// REF: https://pubs.opengroup.org/onlinepubs/9696989899/chap5.htm#tagcjh_08_02_01_01
     pub fn v2(domain: Domain) -> Layout {
         let utc = Timestamp::new();
         let clock_seq = ClockSeq::new(rand::random::<u16>());
@@ -68,6 +75,8 @@ impl Timestamp {
     }
 }
 
+/// the clock sequence is used to help avoid duplicates that could arise
+/// when the clock is set backwards in time or if the node ID changes.
 pub struct Node(pub [u8; 6]);
 
 impl fmt::LowerHex for Node {
@@ -90,6 +99,8 @@ impl fmt::UpperHex for Node {
     }
 }
 
+/// ClockSeq is used to avoid duplicates that could arise when the clock
+/// is set backwards in time
 #[derive(Clone, Copy)]
 pub struct ClockSeq(u16);
 

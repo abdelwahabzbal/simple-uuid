@@ -1,4 +1,4 @@
-name: uuid
+name: uuid-rs
 
 on:
   push:
