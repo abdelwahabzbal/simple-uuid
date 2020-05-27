@@ -3,8 +3,8 @@
 extern crate test;
 
 use test::Bencher;
-use uuid::times::Domain;
-use uuid::Uuid;
+use uuid_rs::times::Domain;
+use uuid_rs::Uuid;
 
 #[bench]
 fn bench_v1(b: &mut Bencher) {

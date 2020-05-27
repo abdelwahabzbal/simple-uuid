@@ -1,5 +1,5 @@
 [package]
-name = "uuid"
+name = "uuid-rs"
 authors = ["Awh6al <awh6al@yandex.com>"]
 version = "0.1.2"
 license = "MIT"
