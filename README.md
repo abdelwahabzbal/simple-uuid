@@ -5,7 +5,7 @@ is also used.
 
 This crate generates and inspects UUIDs based on
  * [RFC 4122](http://tools.ietf.org/html/rfc4122)
- * [DCE 1.1](https://pubs.opengroup.org/onlinepubs/9696989899/chap5.htm#tagcjh_08_02_01_01). 
+ * [DCE 1.1](https://pubs.opengroup.org/onlinepubs/9696989899/chap5.htm#tagcjh_08_02_01_01)
 
 ## Install 
 ```TOML
