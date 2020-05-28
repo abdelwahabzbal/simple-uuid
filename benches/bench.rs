@@ -1,5 +1,6 @@
 #![feature(test)]
 #![cfg(feature = "v1")]
+#![cfg(feature = "v2")]
 #![cfg(feature = "v3")]
 #![cfg(feature = "v5")]
 

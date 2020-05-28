@@ -34,6 +34,7 @@ version = "0.6.0"
 
 [features]
 v1 = ["mac_address"]
+v2 = ["mac_address"]
 v3 = ["md5"]
 v5 = ["sha1"]
 

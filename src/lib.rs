@@ -11,9 +11,9 @@ use regex::Regex;
 use core::fmt;
 use core::str;
 
-#[cfg(all(feature = "v5", feature = "v3"))]
+#[cfg(any(feature = "v5", feature = "v3"))]
 pub mod name;
-#[cfg(feature = "v1")]
+#[cfg(any(feature = "v1", feature = "v2"))]
 pub mod times;
 
 /// The formal definition of the UUID string representation.

@@ -42,10 +42,9 @@ impl Uuid {
     pub fn v2(domain: Domain) -> Layout {
         let utc = Timestamp::new();
         let clock_seq = ClockSeq::new(rand::random::<u16>());
-        let local_id = ((utc & 0xffff_ffff) as u32) | 1000;
 
         Layout {
-            time_low: local_id,
+            time_low: (utc & 0xffff_ffff) as u32,
             time_mid: ((utc >> 32 & 0xffff) as u16),
             time_high_and_version: (utc >> 48 & 0xfff) as u16 | (Version::DCE as u16) << 12,
             clock_seq_high_and_reserved: ((clock_seq >> 8) & 0xf) as u8 | (Variant::RFC as u8) << 4,
