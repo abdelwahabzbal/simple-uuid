@@ -45,3 +45,30 @@ impl Uuid {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_v3() {
+        let uuid = Uuid::v3("any", Uuid::NAMESPACE_X500);
+
+        assert_eq!(uuid.get_version(), Some(Version::MD5));
+        assert_eq!(uuid.get_variant(), Some(Variant::RFC));
+
+        assert!(Uuid::is_valid(&format!("{:x}", uuid.as_bytes())));
+        assert!(Uuid::is_valid(&format!("{:X}", uuid.as_bytes())));
+    }
+
+    #[test]
+    fn test_v5() {
+        let uuid = Uuid::v5("any", Uuid::NAMESPACE_X500);
+
+        assert_eq!(uuid.get_version(), Some(Version::SHA1));
+        assert_eq!(uuid.get_variant(), Some(Variant::RFC));
+
+        assert!(Uuid::is_valid(&format!("{:x}", uuid.as_bytes())));
+        assert!(Uuid::is_valid(&format!("{:X}", uuid.as_bytes())));
+    }
+}

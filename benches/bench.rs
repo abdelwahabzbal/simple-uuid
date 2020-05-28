@@ -1,9 +1,12 @@
 #![feature(test)]
+#![cfg(feature = "v1")]
+#![cfg(feature = "v3")]
+#![cfg(feature = "v5")]
 
 extern crate test;
 
 use test::Bencher;
-use uuid_rs::times::Domain;
+use uuid_rs::times::*;
 use uuid_rs::Uuid;
 
 #[bench]

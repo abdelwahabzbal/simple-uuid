@@ -3,7 +3,7 @@
 //! Unique IDentifier). A UUID is 128 bits long, and can guarantee
 //! uniqueness across space and time.
 
-#![doc(html_root_url = "https://docs.rs/uuid-rs/0.1.3")]
+#![doc(html_root_url = "https://docs.rs/uuid-rs")]
 
 use rand;
 use regex::Regex;
@@ -11,7 +11,9 @@ use regex::Regex;
 use core::fmt;
 use core::str;
 
+#[cfg(all(feature = "v5", feature = "v3"))]
 pub mod name;
+#[cfg(feature = "v1")]
 pub mod times;
 
 /// The formal definition of the UUID string representation.
@@ -242,57 +244,12 @@ impl fmt::UpperHex for Uuid {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use times::*;
-
-    #[test]
-    fn test_v1() {
-        let uuid = Uuid::v1();
-
-        assert_eq!(uuid.get_version(), Some(Version::TIME));
-        assert_eq!(uuid.get_variant(), Some(Variant::RFC));
-
-        assert!(Uuid::is_valid(&format!("{:x}", uuid.as_bytes())));
-        assert!(Uuid::is_valid(&format!("{:X}", uuid.as_bytes())));
-    }
-
-    #[test]
-    fn test_v2() {
-        let uuid = Uuid::v2(Domain::PERSON);
-
-        assert_eq!(uuid.get_version(), Some(Version::DCE));
-        assert_eq!(uuid.get_variant(), Some(Variant::RFC));
-
-        assert!(Uuid::is_valid(&format!("{:x}", uuid.as_bytes())));
-        assert!(Uuid::is_valid(&format!("{:X}", uuid.as_bytes())));
-    }
-
-    #[test]
-    fn test_v3() {
-        let uuid = Uuid::v3("any", Uuid::NAMESPACE_X500);
-
-        assert_eq!(uuid.get_version(), Some(Version::MD5));
-        assert_eq!(uuid.get_variant(), Some(Variant::RFC));
-
-        assert!(Uuid::is_valid(&format!("{:x}", uuid.as_bytes())));
-        assert!(Uuid::is_valid(&format!("{:X}", uuid.as_bytes())));
-    }
 
     #[test]
     fn test_v4() {
         let uuid = Uuid::v4();
 
         assert_eq!(uuid.get_version(), Some(Version::RAND));
-        assert_eq!(uuid.get_variant(), Some(Variant::RFC));
-
-        assert!(Uuid::is_valid(&format!("{:x}", uuid.as_bytes())));
-        assert!(Uuid::is_valid(&format!("{:X}", uuid.as_bytes())));
-    }
-
-    #[test]
-    fn test_v5() {
-        let uuid = Uuid::v5("any", Uuid::NAMESPACE_X500);
-
-        assert_eq!(uuid.get_version(), Some(Version::SHA1));
         assert_eq!(uuid.get_variant(), Some(Variant::RFC));
 
         assert!(Uuid::is_valid(&format!("{:x}", uuid.as_bytes())));
@@ -335,12 +292,5 @@ mod tests {
         for id in uuid.iter() {
             assert!(Uuid::is_valid(id))
         }
-    }
-
-    #[test]
-    fn test_node() {
-        let node = Node([00, 42, 53, 13, 19, 128]);
-        assert_eq!(format!("{:x}", node), "00-2a-35-0d-13-80");
-        assert_eq!(format!("{:X}", node), "00-2A-35-0D-13-80")
     }
 }

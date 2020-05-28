@@ -1,7 +1,8 @@
 [package]
 name = "uuid-rs"
 authors = ["Awh6al <awh6al@yandex.com>"]
-version = "0.1.4"
+documentation = "https://docs.rs/uuid-rs"
+version = "0.2.0"
 license = "MIT"
 edition = "2018"
 readme = "README.md"
@@ -14,13 +15,26 @@ keywords = [
 ]
 description = "A Universally Unique IDentifier (UUID)"
 repository = "https://github.com/awh6al/uuid-rs"
-documentation = "https://docs.rs/uuid-rs"
 
 [dependencies]
-mac_address = "1.0.3"
 regex = "1.3.7"
-rand = "0.7"
-md5 = "0.7.0"
-sha1 = "0.6.0"
+rand = "0.7.3"
+
+[dependencies.mac_address]
+optional = true
+version = "1.0.3"
+
+[dependencies.md5]
+optional = true
+version = "0.7.0"
+
+[dependencies.sha1]
+optional = true
+version = "0.6.0"
+
+[features]
+v1 = ["mac_address"]
+v3 = ["md5"]
+v5 = ["sha1"]
 
 [package.metadata.docs.rs]
