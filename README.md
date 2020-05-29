@@ -10,7 +10,7 @@ This crate generates and inspects UUIDs based on
 ## Install 
 ```TOML
 [dependencies]
-uuid-rs = { version = "0.2.1", features = ["mac"] }
+uuid-rs = { version = "0.2.2", features = ["mac"] }
 ```
 
 ## Usage

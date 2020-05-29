@@ -2,14 +2,14 @@
 name = "uuid-rs"
 authors = ["Awh6al <awh6al@yandex.com>"]
 documentation = "https://docs.rs/uuid-rs"
-version = "0.2.1"
+version = "0.2.2"
 license = "MIT"
 edition = "2018"
 readme = "README.md"
 categories = [
     "data-structures",
-    "unique-identifiers",
-    "windows-administration"
+    "algorithms",
+    "cryptography"
 ]
 keywords = [
     "uuid",
