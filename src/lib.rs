@@ -11,10 +11,7 @@ use regex::Regex;
 use core::fmt;
 use core::str;
 
-#[cfg(any(feature = "v5", feature = "v3"))]
-pub mod name;
-#[cfg(any(feature = "v1", feature = "v2"))]
-pub mod times;
+pub mod based;
 
 /// The formal definition of the UUID string representation.
 #[derive(Debug)]
@@ -81,6 +78,7 @@ impl Layout {
         ])
     }
 
+    /// Get the version of the current generated UUID.
     pub fn get_version(&self) -> Option<Version> {
         match (self.time_high_and_version >> 12) & 0xf {
             0x01 => Some(Version::TIME),
@@ -92,6 +90,7 @@ impl Layout {
         }
     }
 
+    /// Get the variant field of the current generated UUID.
     pub fn get_variant(&self) -> Option<Variant> {
         match (self.clock_seq_high_and_reserved >> 4) & 0xf {
             0x00 => Some(Variant::NCS),
@@ -101,15 +100,9 @@ impl Layout {
             _ => None,
         }
     }
-
-    pub fn get_time(&self) -> times::Timestamp {
-        let time = (self.time_high_and_version as u64 & 0xfff) << 48
-            | (self.time_mid as u64) << 32
-            | self.time_low as u64;
-        times::Timestamp(time)
-    }
 }
 
+/// Variant is a type field determines the layout of the UUID.
 #[derive(Debug, Eq, PartialEq)]
 pub enum Variant {
     /// Reserved, NCS backward compatibility.
@@ -122,6 +115,8 @@ pub enum Variant {
     FUT,
 }
 
+/// Version represents the type of UUID.
+/// The version number is in the most significant 4 bits of the Timestamp.
 #[derive(Debug, Eq, PartialEq)]
 pub enum Version {
     /// The time-based version specified in this document.
@@ -239,6 +234,13 @@ impl fmt::UpperHex for Uuid {
             self.0[15],
         )
     }
+}
+
+#[macro_export]
+macro_rules! uuid_v4 {
+    () => {
+        $crate::Uuid::v4().as_bytes()
+    };
 }
 
 #[cfg(test)]

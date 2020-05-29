@@ -11,6 +11,7 @@ use crate::Version;
 
 pub const UTC_EPOCH: u64 = 0x1B21_DD21_3814_000;
 
+/// Domain is security-domain-relative name.
 pub enum Domain {
     PERSON = 0,
     GROUP,
@@ -54,6 +55,19 @@ impl Uuid {
     }
 }
 
+impl Layout {
+    /// Get the time where the UUID generated in.
+    #[allow(dead_code)]
+    fn get_time(&self) -> Timestamp {
+        let time = (self.time_high_and_version as u64 & 0xfff) << 48
+            | (self.time_mid as u64) << 32
+            | self.time_low as u64;
+        Timestamp(time)
+    }
+}
+
+/// Timestamp represented by Coordinated Universal Time (UTC)
+/// as a count of 100-nanosecond intervals.
 #[derive(Debug)]
 pub struct Timestamp(pub u64);
 
@@ -106,6 +120,20 @@ impl ClockSeq {
     pub fn new(r: u16) -> u16 {
         atomic::AtomicU16::new(r).fetch_add(1, atomic::Ordering::SeqCst)
     }
+}
+
+#[macro_export]
+macro_rules! uuid_v1 {
+    () => {
+        $crate::Uuid::v1().as_bytes()
+    };
+}
+
+#[macro_export]
+macro_rules! uuid_v2 {
+    ($domain:expr) => {
+        $crate::Uuid::v2($domain).as_bytes()
+    };
 }
 
 #[cfg(test)]

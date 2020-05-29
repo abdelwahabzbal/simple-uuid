@@ -46,6 +46,20 @@ impl Uuid {
     }
 }
 
+#[macro_export]
+macro_rules! uuid_v3 {
+    ($any:expr, $namespace:expr) => {
+        $crate::Uuid::v3($any, $namespace).as_bytes()
+    };
+}
+
+#[macro_export]
+macro_rules! uuid_v5 {
+    ($any:expr, $namespace:expr) => {
+        $crate::Uuid::v5($any, $namespace).as_bytes()
+    };
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
