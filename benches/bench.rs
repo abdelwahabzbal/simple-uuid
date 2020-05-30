@@ -5,7 +5,7 @@
 extern crate test;
 
 use test::Bencher;
-use uuid_rs::based::time;
+use uuid_rs::base::time;
 use uuid_rs::uuid_v1;
 use uuid_rs::uuid_v2;
 use uuid_rs::uuid_v3;

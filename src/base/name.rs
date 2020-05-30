@@ -1,3 +1,5 @@
+//! FIX: Add doc here
+
 use md5;
 use sha1::Sha1;
 
@@ -49,14 +51,14 @@ impl Uuid {
 #[macro_export]
 macro_rules! uuid_v3 {
     ($any:expr, $namespace:expr) => {
-        $crate::Uuid::v3($any, $namespace).as_bytes()
+        format!("{:x}", $crate::Uuid::v3($any, $namespace).as_bytes())
     };
 }
 
 #[macro_export]
 macro_rules! uuid_v5 {
     ($any:expr, $namespace:expr) => {
-        $crate::Uuid::v5($any, $namespace).as_bytes()
+        format!("{:x}", $crate::Uuid::v5($any, $namespace).as_bytes())
     };
 }
 
@@ -84,5 +86,11 @@ mod tests {
 
         assert!(Uuid::is_valid(&format!("{:x}", uuid.as_bytes())));
         assert!(Uuid::is_valid(&format!("{:X}", uuid.as_bytes())));
+    }
+
+    #[test]
+    fn test_from_macro() {
+        assert!(Uuid::is_valid(&uuid_v3!("any", Uuid::NAMESPACE_DNS)));
+        assert!(Uuid::is_valid(&uuid_v5!("any", Uuid::NAMESPACE_OID)));
     }
 }

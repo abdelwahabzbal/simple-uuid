@@ -1,3 +1,5 @@
+//! FIX: Add doc here
+
 use mac_address;
 
 use core::fmt;
@@ -125,14 +127,14 @@ impl ClockSeq {
 #[macro_export]
 macro_rules! uuid_v1 {
     () => {
-        $crate::Uuid::v1().as_bytes()
+        format!("{:x}", $crate::Uuid::v1().as_bytes())
     };
 }
 
 #[macro_export]
 macro_rules! uuid_v2 {
     ($domain:expr) => {
-        $crate::Uuid::v2($domain).as_bytes()
+        format!("{:x}", $crate::Uuid::v2($domain).as_bytes())
     };
 }
 
@@ -167,5 +169,11 @@ mod tests {
         let node = Node([00, 42, 53, 13, 19, 128]);
         assert_eq!(format!("{:x}", node), "00-2a-35-0d-13-80");
         assert_eq!(format!("{:X}", node), "00-2A-35-0D-13-80")
+    }
+
+    #[test]
+    fn test_from_macro() {
+        assert!(Uuid::is_valid(&uuid_v1!()));
+        assert!(Uuid::is_valid(&uuid_v2!(Domain::PERSON)));
     }
 }

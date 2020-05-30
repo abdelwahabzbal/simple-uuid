@@ -10,12 +10,12 @@ This crate generates and inspects UUIDs based on
 ## Install 
 ```TOML
 [dependencies]
-uuid-rs = { version = "0.2.3", features = ["mac"] }
+uuid-rs = "0.2.3"
 ```
 
 ## Usage
 ```Rust
-use uuid_rs::Uuid::uuid_v1;
+use uuid_rs::uuid_v4;
 
-println!("{}", uuid_v1!())
+println!("{}", uuid_v4!())
 ```

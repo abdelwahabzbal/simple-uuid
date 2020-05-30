@@ -11,7 +11,7 @@ use regex::Regex;
 use core::fmt;
 use core::str;
 
-pub mod based;
+pub mod base;
 
 /// The formal definition of the UUID string representation.
 #[derive(Debug)]
@@ -239,7 +239,7 @@ impl fmt::UpperHex for Uuid {
 #[macro_export]
 macro_rules! uuid_v4 {
     () => {
-        $crate::Uuid::v4().as_bytes()
+        format!("{:x}", $crate::Uuid::v4().as_bytes())
     };
 }
 
@@ -256,6 +256,11 @@ mod tests {
 
         assert!(Uuid::is_valid(&format!("{:x}", uuid.as_bytes())));
         assert!(Uuid::is_valid(&format!("{:X}", uuid.as_bytes())));
+    }
+
+    #[test]
+    fn test_from_macro() {
+        assert!(Uuid::is_valid(&uuid_v4!()));
     }
 
     #[test]
