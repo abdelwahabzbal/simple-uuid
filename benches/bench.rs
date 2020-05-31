@@ -1,17 +1,10 @@
 #![feature(test)]
-#![cfg(feature = "mac")]
-#![cfg(feature = "hash")]
 
 extern crate test;
 
 use test::Bencher;
 use uuid_rs::base::time;
-use uuid_rs::uuid_v1;
-use uuid_rs::uuid_v2;
-use uuid_rs::uuid_v3;
-use uuid_rs::uuid_v4;
-use uuid_rs::uuid_v5;
-use uuid_rs::Uuid;
+use uuid_rs::*;
 
 #[bench]
 fn bench_v1(b: &mut Bencher) {
