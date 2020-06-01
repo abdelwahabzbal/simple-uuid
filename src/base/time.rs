@@ -1,16 +1,14 @@
-//! FIX: Add doc here
+//! Is version-1, version-2 UUIDs based on time and MAC addresse.
 
-use mac_address;
+use mac_address as mac;
 
 use core::fmt;
 use core::sync::atomic;
 use std::time::{self, SystemTime};
 
-use crate::Layout;
-use crate::Uuid;
-use crate::Variant;
-use crate::Version;
+use crate::*;
 
+/// Is 100-ns ticks between UNIX and UTC epochs.
 pub const UTC_EPOCH: u64 = 0x1B21_DD21_3814_000;
 
 /// Domain is security-domain-relative name.
@@ -32,11 +30,11 @@ impl Uuid {
             time_high_and_version: (utc >> 48 & 0xfff) as u16 | (Version::TIME as u16) << 12,
             clock_seq_high_and_reserved: ((clock_seq >> 8) & 0xf) as u8 | (Variant::RFC as u8) << 4,
             clock_seq_low: (clock_seq & 0xff) as u8,
-            node: mac_address::get_mac_address().unwrap().unwrap().bytes(),
+            node: mac::get_mac_address().unwrap().unwrap().bytes(),
         }
     }
 
-    /// Generate a time based, MAC address and DCE security version UUID.
+    /// Generate a time-based, MAC address and DCE security version UUID.
     ///
     /// NOTE: RFC 4122 reserves version 2 for "DCE security" UUIDs;
     /// but it does not provide any details.
@@ -52,7 +50,7 @@ impl Uuid {
             time_high_and_version: (utc >> 48 & 0xfff) as u16 | (Version::DCE as u16) << 12,
             clock_seq_high_and_reserved: ((clock_seq >> 8) & 0xf) as u8 | (Variant::RFC as u8) << 4,
             clock_seq_low: domain as u8,
-            node: mac_address::get_mac_address().unwrap().unwrap().bytes(),
+            node: mac::get_mac_address().unwrap().unwrap().bytes(),
         }
     }
 }
@@ -69,11 +67,12 @@ impl Layout {
 }
 
 /// Timestamp represented by Coordinated Universal Time (UTC)
-/// as a count of 100-nanosecond intervals.
+/// as a count of 100-ns intervals from the system time.
 #[derive(Debug)]
 pub struct Timestamp(pub u64);
 
 impl Timestamp {
+    /// Generate new 60-bit value from the system time.
     pub fn new() -> u64 {
         let nano = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)

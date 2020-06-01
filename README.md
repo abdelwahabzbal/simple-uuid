@@ -19,3 +19,8 @@ use uuid_rs::uuid_v4;
 
 println!("{}", uuid_v4!())
 ```
+
+## Security
+
+Do not assume that UUIDs are hard to guess; they should not be used
+as security capabilities.
