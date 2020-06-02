@@ -8,10 +8,8 @@ use crate::*;
 
 impl UUID {
     /// Generate a UUID by hashing a namespace identifier and name uses MD5.
-    pub fn v3(any: &str, ns: UUID) -> Layout {
-        let data = format!("{:x}", ns) + any;
-        let hash = md5::compute(&data).0;
-
+    pub fn v3(any: &str, namespace: UUID) -> Layout {
+        let hash = md5::compute(Self::data(any, namespace)).0;
         Layout {
             time_low: ((hash[0] as u32) << 24)
                 | (hash[1] as u32) << 16
@@ -27,10 +25,8 @@ impl UUID {
     }
 
     /// Generate a UUID by hashing a namespace identifier and name uses SHA1.
-    pub fn v5(any: &str, nspace: UUID) -> Layout {
-        let data = format!("{:x}", nspace) + any;
-        let hash = Sha1::from(&data).digest().bytes();
-
+    pub fn v5(any: &str, namespace: UUID) -> Layout {
+        let hash = Sha1::from(Self::data(any, namespace)).digest().bytes();
         Layout {
             time_low: ((hash[0] as u32) << 24)
                 | (hash[1] as u32) << 16
@@ -43,6 +39,10 @@ impl UUID {
             clock_seq_low: hash[9] as u8,
             node: [hash[10], hash[11], hash[12], hash[13], hash[14], hash[15]],
         }
+    }
+
+    fn data(any: &str, namespace: UUID) -> String {
+        format!("{:x}", namespace) + any
     }
 }
 

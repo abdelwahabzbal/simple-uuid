@@ -9,7 +9,6 @@ impl UUID {
     pub fn v4() -> Layout {
         let rng = rand::random::<u128>();
         let rand = rng.to_be_bytes();
-
         Layout {
             time_low: ((rand[0] as u32) << 24)
                 | (rand[1] as u32) << 16

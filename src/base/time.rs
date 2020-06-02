@@ -1,6 +1,6 @@
 //! Is version-1, version-2 UUIDs based on time and MAC-addresse.
 
-use mac_address as mac;
+use mac_address as MAC;
 
 use core::fmt;
 use core::sync::atomic;
@@ -19,18 +19,17 @@ pub enum Domain {
 }
 
 impl UUID {
-    /// Generate a time-based and MAC address UUID.
+    /// Generate a time-based and MAC-address UUID.
     pub fn v1() -> Layout {
         let utc = Timestamp::new();
-        let clock_seq = ClockSeq::new(rand::random::<u16>());
-
+        let clock_seq = Self::clock_seq_high_and_reserved(1);
         Layout {
             time_low: ((utc & 0xffff_ffff) as u32),
             time_mid: ((utc >> 32 & 0xffff) as u16),
             time_high_and_version: (utc >> 48 & 0xfff) as u16 | (Version::TIME as u16) << 12,
-            clock_seq_high_and_reserved: ((clock_seq >> 8) & 0xf) as u8 | (Variant::RFC as u8) << 4,
-            clock_seq_low: (clock_seq & 0xff) as u8,
-            node: Self::get_mac_address(),
+            clock_seq_high_and_reserved: clock_seq.0,
+            clock_seq_low: clock_seq.1,
+            node: Self::mac_address(),
         }
     }
 
@@ -40,22 +39,28 @@ impl UUID {
     /// but it does not provide any details.
     ///
     /// REF: https://pubs.opengroup.org/onlinepubs/9696989899/chap5.htm#tagcjh_08_02_01_01
-    pub fn v2(domain: Domain) -> Layout {
+    pub fn v2(d: Domain) -> Layout {
         let utc = Timestamp::new();
-        let clock_seq = ClockSeq::new(rand::random::<u16>());
-
         Layout {
             time_low: (utc & 0xffff_ffff) as u32,
             time_mid: ((utc >> 32 & 0xffff) as u16),
             time_high_and_version: (utc >> 48 & 0xfff) as u16 | (Version::DCE as u16) << 12,
-            clock_seq_high_and_reserved: ((clock_seq >> 8) & 0xf) as u8 | (Variant::RFC as u8) << 4,
-            clock_seq_low: domain as u8,
-            node: Self::get_mac_address(),
+            clock_seq_high_and_reserved: Self::clock_seq_high_and_reserved(1).0,
+            clock_seq_low: d as u8,
+            node: Self::mac_address(),
         }
     }
 
-    fn get_mac_address() -> [u8; 6] {
-        mac::get_mac_address().unwrap().unwrap().bytes()
+    fn clock_seq_high_and_reserved(s: u8) -> (u8, u8) {
+        let clock_seq = ClockSeq::new(rand::random::<u16>());
+        (
+            ((clock_seq >> 8) & 0xf) as u8 | s << 4,
+            (clock_seq & 0xff) as u8,
+        )
+    }
+
+    fn mac_address() -> [u8; 6] {
+        MAC::get_mac_address().unwrap().unwrap().bytes()
     }
 }
 
