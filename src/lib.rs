@@ -11,13 +11,13 @@ use core::fmt;
 use core::str;
 
 #[cfg(feature = "mac")]
-pub mod time;
+mod time;
 
 #[cfg(feature = "hash")]
-pub mod name;
+mod name;
 
 #[cfg(feature = "rand")]
-pub mod random;
+mod random;
 
 /// The UUID format is 16 octets.
 #[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
@@ -95,6 +95,13 @@ impl Layout {
             _ => None,
         }
     }
+}
+
+/// Domain is security-domain-relative name.
+pub enum Domain {
+    PERSON = 0,
+    GROUP,
+    ORG,
 }
 
 /// Variant is a type field determines the layout of the UUID.

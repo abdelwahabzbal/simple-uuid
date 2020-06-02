@@ -11,13 +11,6 @@ use crate::*;
 /// UTC_EPOCH is 100-ns ticks between UNIX and UTC epochs.
 pub const UTC_EPOCH: u64 = 0x1B21_DD21_3814_000;
 
-/// Domain is security-domain-relative name.
-pub enum Domain {
-    PERSON = 0,
-    GROUP,
-    ORG,
-}
-
 impl UUID {
     /// Generate a time-based and MAC-address UUID.
     pub fn v1() -> Layout {

@@ -3,7 +3,6 @@
 extern crate test;
 
 use test::Bencher;
-use uuid_rs::time;
 use uuid_rs::*;
 
 #[bench]
@@ -13,7 +12,7 @@ fn bench_v1(b: &mut Bencher) {
 
 #[bench]
 fn bench_v2(b: &mut Bencher) {
-    b.iter(|| uuid_v2!(time::Domain::PERSON));
+    b.iter(|| uuid_v2!(Domain::PERSON));
 }
 
 #[bench]
