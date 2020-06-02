@@ -12,19 +12,8 @@ use core::str;
 
 pub mod base;
 
-/// The formal definition of the UUID string representation.
-#[derive(Debug)]
-pub enum Format {
-    Layout,
-    Variant,
-    Version,
-    TimeStamp,
-    ClockSeq,
-    Node,
-}
-
 /// The UUID format is 16 octets.
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Layout {
     /// The low field of the Timestamp.
     pub time_low: u32,
@@ -56,8 +45,8 @@ impl Layout {
         )
     }
 
-    pub fn as_bytes(&self) -> Uuid {
-        Uuid([
+    pub fn as_bytes(&self) -> UUID {
+        UUID([
             self.time_low.to_be_bytes()[0],
             self.time_low.to_be_bytes()[1],
             self.time_low.to_be_bytes()[2],
@@ -102,7 +91,7 @@ impl Layout {
 }
 
 /// Variant is a type field determines the layout of the UUID.
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub enum Variant {
     /// Reserved, NCS backward compatibility.
     NCS = 0,
@@ -116,7 +105,7 @@ pub enum Variant {
 
 /// Version represents the type of UUID.
 /// The version number is in the most significant 4 bits of the Timestamp.
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub enum Version {
     /// The time-based version specified in this document.
     TIME = 1,
@@ -131,30 +120,30 @@ pub enum Version {
 }
 
 /// Is a 128-bit number used to identify information in computer systems.
-#[derive(Debug)]
-pub struct Uuid([u8; 16]);
+#[derive(Debug, Ord, PartialOrd, Eq, PartialEq)]
+pub struct UUID([u8; 16]);
 
-impl Uuid {
+impl UUID {
     /// UUID namespace for Domain Name System (DNS).
-    pub const NAMESPACE_DNS: Self = Uuid([
+    pub const NAMESPACE_DNS: Self = UUID([
         0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30,
         0xc8,
     ]);
 
     /// UUID namespace for ISO Object Identifiers (OIDs).
-    pub const NAMESPACE_OID: Self = Uuid([
+    pub const NAMESPACE_OID: Self = UUID([
         0x6b, 0xa7, 0xb8, 0x12, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30,
         0xc8,
     ]);
 
     /// UUID namespace for Uniform Resource Locators (URLs).
-    pub const NAMESPACE_URL: Self = Uuid([
+    pub const NAMESPACE_URL: Self = UUID([
         0x6b, 0xa7, 0xb8, 0x11, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30,
         0xc8,
     ]);
 
     /// UUID namespace for X.500 Distinguished Names (DNs).
-    pub const NAMESPACE_X500: Self = Uuid([
+    pub const NAMESPACE_X500: Self = UUID([
         0x6b, 0xa7, 0xb8, 0x14, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30,
         0xc8,
     ]);
@@ -168,7 +157,7 @@ impl Uuid {
     }
 }
 
-impl fmt::LowerHex for Uuid {
+impl fmt::LowerHex for UUID {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             fmt,
@@ -193,7 +182,7 @@ impl fmt::LowerHex for Uuid {
     }
 }
 
-impl fmt::UpperHex for Uuid {
+impl fmt::UpperHex for UUID {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             fmt,
@@ -230,7 +219,7 @@ mod tests {
         ];
 
         for id in uuid.iter() {
-            assert!(Uuid::is_valid(id))
+            assert!(UUID::is_valid(id))
         }
     }
 
@@ -242,7 +231,7 @@ mod tests {
         ];
 
         for id in uuid.iter() {
-            assert!(Uuid::is_valid(&id.to_ascii_uppercase()))
+            assert!(UUID::is_valid(&id.to_ascii_uppercase()))
         }
     }
 
@@ -256,7 +245,7 @@ mod tests {
         ];
 
         for id in uuid.iter() {
-            assert!(Uuid::is_valid(id))
+            assert!(UUID::is_valid(id))
         }
     }
 }

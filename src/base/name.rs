@@ -6,9 +6,9 @@ use sha1::Sha1;
 
 use crate::*;
 
-impl Uuid {
+impl UUID {
     /// Generate a UUID by hashing a namespace identifier and name uses MD5.
-    pub fn v3(any: &str, ns: Uuid) -> Layout {
+    pub fn v3(any: &str, ns: UUID) -> Layout {
         let data = format!("{:x}", ns) + any;
         let hash = md5::compute(&data).0;
 
@@ -27,7 +27,7 @@ impl Uuid {
     }
 
     /// Generate a UUID by hashing a namespace identifier and name uses SHA1.
-    pub fn v5(any: &str, nspace: Uuid) -> Layout {
+    pub fn v5(any: &str, nspace: UUID) -> Layout {
         let data = format!("{:x}", nspace) + any;
         let hash = Sha1::from(&data).digest().bytes();
 
@@ -49,14 +49,14 @@ impl Uuid {
 #[macro_export]
 macro_rules! uuid_v3 {
     ($any:expr, $namespace:expr) => {
-        format!("{:x}", $crate::Uuid::v3($any, $namespace).as_bytes())
+        format!("{:x}", $crate::UUID::v3($any, $namespace).as_bytes())
     };
 }
 
 #[macro_export]
 macro_rules! uuid_v5 {
     ($any:expr, $namespace:expr) => {
-        format!("{:x}", $crate::Uuid::v5($any, $namespace).as_bytes())
+        format!("{:x}", $crate::UUID::v5($any, $namespace).as_bytes())
     };
 }
 
@@ -66,29 +66,29 @@ mod tests {
 
     #[test]
     fn test_v3() {
-        let uuid = Uuid::v3("any", Uuid::NAMESPACE_X500);
+        let uuid = UUID::v3("any", UUID::NAMESPACE_X500);
 
         assert_eq!(uuid.get_version(), Some(Version::MD5));
         assert_eq!(uuid.get_variant(), Some(Variant::RFC));
 
-        assert!(Uuid::is_valid(&format!("{:x}", uuid.as_bytes())));
-        assert!(Uuid::is_valid(&format!("{:X}", uuid.as_bytes())));
+        assert!(UUID::is_valid(&format!("{:x}", uuid.as_bytes())));
+        assert!(UUID::is_valid(&format!("{:X}", uuid.as_bytes())));
     }
 
     #[test]
     fn test_v5() {
-        let uuid = Uuid::v5("any", Uuid::NAMESPACE_X500);
+        let uuid = UUID::v5("any", UUID::NAMESPACE_X500);
 
         assert_eq!(uuid.get_version(), Some(Version::SHA1));
         assert_eq!(uuid.get_variant(), Some(Variant::RFC));
 
-        assert!(Uuid::is_valid(&format!("{:x}", uuid.as_bytes())));
-        assert!(Uuid::is_valid(&format!("{:X}", uuid.as_bytes())));
+        assert!(UUID::is_valid(&format!("{:x}", uuid.as_bytes())));
+        assert!(UUID::is_valid(&format!("{:X}", uuid.as_bytes())));
     }
 
     #[test]
     fn test_from_macro() {
-        assert!(Uuid::is_valid(&uuid_v3!("any", Uuid::NAMESPACE_DNS)));
-        assert!(Uuid::is_valid(&uuid_v5!("any", Uuid::NAMESPACE_OID)));
+        assert!(UUID::is_valid(&uuid_v3!("any", UUID::NAMESPACE_DNS)));
+        assert!(UUID::is_valid(&uuid_v5!("any", UUID::NAMESPACE_OID)));
     }
 }

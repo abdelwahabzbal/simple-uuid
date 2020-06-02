@@ -10,7 +10,7 @@ This crate generates and inspects UUIDs based on
 ## Install 
 ```TOML
 [dependencies]
-uuid-rs = "0.2.3"
+uuid-rs = { version = "0.2.4", feature = "rand" }
 ```
 
 ## Usage
@@ -22,5 +22,4 @@ println!("{}", uuid_v4!())
 
 ## Security
 
-Do not assume that UUIDs are hard to guess; they should not be used
-as security capabilities.
+Do not assume that UUIDs are hard to guess; they should not be used as security capabilities.

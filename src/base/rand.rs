@@ -4,7 +4,7 @@ use rand;
 
 use crate::*;
 
-impl Uuid {
+impl UUID {
     /// Generate a UUID from truly random numbers.
     pub fn v4() -> Layout {
         let rng = rand::random::<u128>();
@@ -28,7 +28,7 @@ impl Uuid {
 #[macro_export]
 macro_rules! uuid_v4 {
     () => {
-        format!("{:x}", $crate::Uuid::v4().as_bytes())
+        format!("{:x}", $crate::UUID::v4().as_bytes())
     };
 }
 
@@ -38,12 +38,12 @@ mod tests {
 
     #[test]
     fn test_v4() {
-        let uuid = Uuid::v4();
+        let uuid = UUID::v4();
 
         assert_eq!(uuid.get_version(), Some(Version::RAND));
         assert_eq!(uuid.get_variant(), Some(Variant::RFC));
 
-        assert!(Uuid::is_valid(&format!("{:x}", uuid.as_bytes())));
-        assert!(Uuid::is_valid(&format!("{:X}", uuid.as_bytes())));
+        assert!(UUID::is_valid(&format!("{:x}", uuid.as_bytes())));
+        assert!(UUID::is_valid(&format!("{:X}", uuid.as_bytes())));
     }
 }

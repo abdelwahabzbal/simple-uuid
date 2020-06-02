@@ -18,7 +18,7 @@ fn bench_v2(b: &mut Bencher) {
 
 #[bench]
 fn bench_v3(b: &mut Bencher) {
-    b.iter(|| uuid_v3!("any", Uuid::NAMESPACE_DNS));
+    b.iter(|| uuid_v3!("any", UUID::NAMESPACE_DNS));
 }
 
 #[bench]
@@ -28,17 +28,10 @@ fn bench_v4(b: &mut Bencher) {
 
 #[bench]
 fn bench_v5(b: &mut Bencher) {
-    b.iter(|| uuid_v5!("any", Uuid::NAMESPACE_X500));
+    b.iter(|| uuid_v5!("any", UUID::NAMESPACE_X500));
 }
 
 #[bench]
-fn bench_is_valid_lower(b: &mut Bencher) {
-    let uuid = Uuid::v1();
-    b.iter(|| Uuid::is_valid(&format!("{:x}", uuid.as_bytes())));
-}
-
-#[bench]
-fn bench_is_valid_upper(b: &mut Bencher) {
-    let uuid = Uuid::v2(time::Domain::ORG);
-    b.iter(|| Uuid::is_valid(&format!("{:X}", uuid.as_bytes())));
+fn bench_is_valid(b: &mut Bencher) {
+    b.iter(|| UUID::is_valid(&uuid_v1!()));
 }
