@@ -10,7 +10,14 @@ use regex::Regex;
 use core::fmt;
 use core::str;
 
-pub mod base;
+#[cfg(feature = "mac")]
+pub mod time;
+
+#[cfg(feature = "hash")]
+pub mod name;
+
+#[cfg(feature = "rand")]
+pub mod random;
 
 /// The UUID format is 16 octets.
 #[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]

@@ -1,6 +1,6 @@
 extern crate uuid_rs;
 
-use uuid_rs::base::time::*;
+use uuid_rs::time::*;
 use uuid_rs::*;
 
 #[test]

@@ -3,7 +3,7 @@
 extern crate test;
 
 use test::Bencher;
-use uuid_rs::base::time;
+use uuid_rs::time;
 use uuid_rs::*;
 
 #[bench]

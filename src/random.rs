@@ -1,8 +1,7 @@
 //! Is version-4 based on Truly Random or Pseudo-Random Numbers.
 
-use rand;
-
 use crate::*;
+use rand;
 
 impl UUID {
     /// Generate a UUID from truly random numbers.
