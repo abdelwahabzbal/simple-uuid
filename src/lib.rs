@@ -12,12 +12,15 @@ use core::str;
 
 #[cfg(feature = "mac")]
 mod time;
+pub use time::*;
 
 #[cfg(feature = "hash")]
 mod name;
+pub use name::*;
 
 #[cfg(feature = "rand")]
 mod random;
+pub use random::*;
 
 /// The UUID format is 16 octets.
 #[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
