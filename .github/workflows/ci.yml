@@ -22,4 +22,4 @@ jobs:
         toolchain: nightly
         override: true
     - name: Run uuid tests
-      run: cargo test --all-features --tests --verbose
+      run: cargo test --tests --verbose
