@@ -7,10 +7,10 @@ This crate generates and inspects UUIDs based on
  * [RFC 4122](http://tools.ietf.org/html/rfc4122)
  * [DCE 1.1](https://pubs.opengroup.org/onlinepubs/9696989899/chap5.htm#tagcjh_08_02_01_01)
 
-## Install 
+## Install
 ```TOML
 [dependencies]
-uuid-rs = "0.3.5"
+uuid-rs = { version = "0.4.0", features = ["randy"]
 ```
 
 ## Usage

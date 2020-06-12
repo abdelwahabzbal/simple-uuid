@@ -30,7 +30,3 @@ fn bench_v5(b: &mut Bencher) {
     b.iter(|| uuid_v5!("any", UUID::NAMESPACE_X500));
 }
 
-#[bench]
-fn bench_is_valid(b: &mut Bencher) {
-    b.iter(|| UUID::is_valid(&uuid_v1!()));
-}
