@@ -3,7 +3,7 @@ name = "uuid-rs"
 description = "A Universally Unique IDentifier (UUID)"
 authors = ["Awh6al <awh6al@yandex.com>"]
 documentation = "https://docs.rs/uuid-rs"
-version = "0.4.0"
+version = "0.4.1"
 license = "MIT"
 edition = "2018"
 readme = "README.md"
@@ -36,4 +36,5 @@ md_5 = ["md5"]
 sha_1 = ["sha1"]
 
 [package.metadata.docs.rs]
+all-features = true
 

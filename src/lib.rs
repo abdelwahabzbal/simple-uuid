@@ -3,8 +3,6 @@
 //! Unique Identifier). A UUID is 128 bits long, and can guarantee
 //! uniqueness across space and time.
 //!
-//! To activate various features, use syntax like:
-//!
 //! ```toml
 //! [dependencies]
 //! uuid = { version = "0.4.0", features = ["randy"] }

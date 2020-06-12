@@ -47,6 +47,7 @@ impl UUID {
     }
 }
 
+/// Creates a lower version-3 `UUID` String.
 #[cfg(feature = "md_5")]
 #[macro_export]
 macro_rules! uuid_v3 {
@@ -55,6 +56,7 @@ macro_rules! uuid_v3 {
     };
 }
 
+/// Creates a lower version-5 `UUID` String.
 #[cfg(feature = "sha_1")]
 #[macro_export]
 macro_rules! uuid_v5 {
@@ -68,7 +70,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_name_based() {
+    fn test_v3() {
         let namespace = [
             UUID::NAMESPACE_DNS,
             UUID::NAMESPACE_OID,
@@ -85,6 +87,20 @@ mod tests {
             assert_eq!(UUID::v5("any", *s).get_version(), Some(Version::SHA1));
             assert_eq!(UUID::v5("any", *s).get_variant(), Some(Variant::RFC));
         }
+    }
 
+    #[test]
+    fn test_v5() {
+        let namespace = [
+            UUID::NAMESPACE_DNS,
+            UUID::NAMESPACE_OID,
+            UUID::NAMESPACE_URL,
+            UUID::NAMESPACE_X500,
+        ];
+
+        for s in namespace.iter() {
+            assert_eq!(UUID::v5("any", *s).get_version(), Some(Version::SHA1));
+            assert_eq!(UUID::v5("any", *s).get_variant(), Some(Variant::RFC));
+        }
     }
 }

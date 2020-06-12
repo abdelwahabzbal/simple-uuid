@@ -29,4 +29,3 @@ fn bench_v4(b: &mut Bencher) {
 fn bench_v5(b: &mut Bencher) {
     b.iter(|| uuid_v5!("any", UUID::NAMESPACE_X500));
 }
-

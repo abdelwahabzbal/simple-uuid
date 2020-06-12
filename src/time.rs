@@ -51,6 +51,7 @@ impl UUID {
     }
 }
 
+/// Creates a lower version-1 `UUID` String.
 #[macro_export]
 macro_rules! uuid_v1 {
     () => {
@@ -58,6 +59,7 @@ macro_rules! uuid_v1 {
     };
 }
 
+/// Creates a lower version-2 `UUID` String.
 #[macro_export]
 macro_rules! uuid_v2 {
     ($domain:expr) => {
@@ -90,16 +92,11 @@ mod tests {
 
     #[test]
     fn test_v2() {
-        let domain = [
-            Domain::PERSON,
-            Domain::GROUP,
-            Domain::ORG,
-        ];
+        let domain = [Domain::PERSON, Domain::GROUP, Domain::ORG];
 
         for d in domain.iter() {
             assert_eq!(UUID::v2(*d).get_version(), Some(Version::DCE));
             assert_eq!(UUID::v2(*d).get_variant(), Some(Variant::RFC));
         }
-
     }
 }
