@@ -1,6 +1,6 @@
 [package]
 name = "uuid-rs"
-description = "A Universally Unique IDentifier (UUID)"
+description = "A Simple Universally Unique IDentifier (UUID)"
 authors = ["Awh6al <awh6al@yandex.com>"]
 documentation = "https://docs.rs/uuid-rs"
 version = "0.4.1"
@@ -21,8 +21,8 @@ keywords = [
 repository = "https://github.com/awh6al/uuid-rs"
 
 [dependencies]
-rand = { version = "0.7.3", optional = true }
 mac_address = { version = "1.0.3", optional = true }
+rand = { version = "0.7.3", optional = true }
 md5 = { version = "0.7.0", optional = true }
 sha1 = { version = "0.6.0", optional = true }
 

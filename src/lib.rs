@@ -47,7 +47,7 @@ pub struct Layout {
 }
 
 impl Layout {
-    /// Returns the four field values of the UUID in big-endian order.
+    /// Returns the five field values of the UUID in big-endian order.
     pub fn as_fields(&self) -> (u32, u16, u16, u16, u64) {
         (
             self.time_low,
