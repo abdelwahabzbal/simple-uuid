@@ -254,7 +254,7 @@ mod tests {
     }
 
     #[test]
-    fn test_node() {
+    fn test_node_format() {
         let node = Node([00, 42, 53, 13, 19, 128]);
 
         assert_eq!(format!("{}", node), "00-2a-35-0d-13-80");
@@ -262,7 +262,7 @@ mod tests {
     }
 
     #[test]
-    fn test_valid_uuid() {
+    fn test_is_valid_uuid() {
         let uuid = [
             uuid_v1!(),
             uuid_v2!(Domain::PERSON),
@@ -276,7 +276,7 @@ mod tests {
         }
 
         for id in uuid.iter() {
-            assert!(is_valid(&id.to_ascii_uppercase()))
+            assert!(is_valid(&id.to_uppercase()))
         }
     }
 }
