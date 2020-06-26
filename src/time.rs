@@ -6,7 +6,7 @@ use rand;
 use crate::{ClockSeq, Domain, Layout, Timestamp, Variant, Version, UUID};
 
 impl UUID {
-    /// Generate a time-based and MAC-address UUID.
+    /// Generate a time-based and MAC-address version UUID.
     pub fn new_v1() -> Layout {
         let utc = Timestamp::new();
         let clock_seq = Self::clock_seq_high_and_reserved(Variant::RFC as u8);
@@ -16,13 +16,13 @@ impl UUID {
             field_high_and_version: (utc >> 48 & 0xfff) as u16 | (Version::TIME as u16) << 12,
             clock_seq_high_and_reserved: clock_seq.0,
             clock_seq_low: clock_seq.1,
-            node: Self::mac_address(),
+            node: Self::MAC_address(),
         }
     }
 
-    /// Generate a time-based, MAC address and DCE security version UUID.
+    /// Generate a time-based, MAC-address and DCE-security version UUID.
     ///
-    /// NOTE: rfc-4122 reserves version-2 for `DCE security` UUIDs;
+    /// NOTE: RFC-4122 reserves version-2 for `DCE-security` UUIDs;
     /// but it does not provide any details.
     pub fn new_v2(d: Domain) -> Layout {
         let utc = Timestamp::new();
@@ -32,7 +32,7 @@ impl UUID {
             field_high_and_version: (utc >> 48 & 0xfff) as u16 | (Version::DCE as u16) << 12,
             clock_seq_high_and_reserved: Self::clock_seq_high_and_reserved(Variant::RFC as u8).0,
             clock_seq_low: d as u8,
-            node: Self::mac_address(),
+            node: Self::MAC_address(),
         }
     }
 
@@ -44,7 +44,8 @@ impl UUID {
         )
     }
 
-    fn mac_address() -> [u8; 6] {
+    #[allow(non_snake_case)]
+    fn MAC_address() -> [u8; 6] {
         MAC::get_mac_address().unwrap().unwrap().bytes()
     }
 }
