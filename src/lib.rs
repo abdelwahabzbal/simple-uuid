@@ -5,7 +5,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! uuid = { version = "0.4.0", features = ["randy"] }
+//! uuid = { version = "0.5.0", features = ["random"] }
 //! ```
 //!
 //! ```rust
@@ -18,9 +18,9 @@
 
 #![doc(html_root_url = "https://docs.rs/uuid-rs")]
 
-mod name;
-mod rand;
-mod time;
+mod name_based;
+mod random_based;
+mod time_based;
 
 use core::fmt;
 use core::sync::atomic;
@@ -30,14 +30,14 @@ use std::time::SystemTime;
 pub const UTC_EPOCH: u64 = 0x1B21_DD21_3814_000;
 
 /// The UUID format is 16 octets.
-#[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Debug)]
 pub struct Layout {
     /// The low field of the Timestamp.
-    pub time_low: u32,
+    pub field_low: u32,
     /// The mid field of the Timestamp.
-    pub time_mid: u16,
+    pub field_mid: u16,
     /// The high field of the Timestamp multiplexed with the version number.
-    pub time_high_and_version: u16,
+    pub field_high_and_version: u16,
     /// The high field of the ClockSeq multiplexed with the variant.
     pub clock_seq_high_and_reserved: u8,
     /// The low field of the ClockSeq.
@@ -50,9 +50,9 @@ impl Layout {
     /// Returns the five field values of the UUID in big-endian order.
     pub fn as_fields(&self) -> (u32, u16, u16, u16, u64) {
         (
-            self.time_low,
-            self.time_mid,
-            self.time_high_and_version,
+            self.field_low,
+            self.field_mid,
+            self.field_high_and_version,
             ((self.clock_seq_high_and_reserved as u16) << 8) | self.clock_seq_low as u16,
             (self.node[0] as u64) << 40
                 | (self.node[1] as u64) << 32
@@ -66,14 +66,14 @@ impl Layout {
     /// Returns a byte slice of this UUID content.
     pub fn as_bytes(&self) -> UUID {
         UUID([
-            self.time_low.to_be_bytes()[0],
-            self.time_low.to_be_bytes()[1],
-            self.time_low.to_be_bytes()[2],
-            self.time_low.to_be_bytes()[3],
-            self.time_mid.to_be_bytes()[0],
-            self.time_mid.to_be_bytes()[1],
-            self.time_high_and_version.to_be_bytes()[0],
-            self.time_high_and_version.to_be_bytes()[1],
+            self.field_low.to_be_bytes()[0],
+            self.field_low.to_be_bytes()[1],
+            self.field_low.to_be_bytes()[2],
+            self.field_low.to_be_bytes()[3],
+            self.field_mid.to_be_bytes()[0],
+            self.field_mid.to_be_bytes()[1],
+            self.field_high_and_version.to_be_bytes()[0],
+            self.field_high_and_version.to_be_bytes()[1],
             self.clock_seq_high_and_reserved,
             self.clock_seq_low,
             self.node[0],
@@ -87,7 +87,7 @@ impl Layout {
 
     /// Get the version of the current generated UUID.
     pub fn get_version(&self) -> Option<Version> {
-        match (self.time_high_and_version >> 12) & 0xf {
+        match (self.field_high_and_version >> 12) & 0xf {
             0x01 => Some(Version::TIME),
             0x02 => Some(Version::DCE),
             0x03 => Some(Version::MD5),
@@ -107,18 +107,10 @@ impl Layout {
             _ => None,
         }
     }
-
-    /// Get the time where the UUID generated in.
-    pub fn get_time(&self) -> Timestamp {
-        let time = (self.time_high_and_version as u64 & 0xfff) << 48
-            | (self.time_mid as u64) << 32
-            | self.time_low as u64;
-        Timestamp(time)
-    }
 }
 
 /// Domain is security-domain-relative name.
-#[derive(Debug, Eq, PartialEq, Ord, PartialOrd, Copy, Clone)]
+#[derive(Copy, Clone)]
 pub enum Domain {
     PERSON = 0,
     GROUP,
@@ -126,7 +118,7 @@ pub enum Domain {
 }
 
 /// Variant is a type field determines the layout of the UUID.
-#[derive(Debug, Eq, PartialEq, Ord, PartialOrd, Copy, Clone)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum Variant {
     /// Reserved, NCS backward compatibility.
     NCS = 0,
@@ -139,7 +131,7 @@ pub enum Variant {
 }
 
 /// Version represents the type of UUID, and is in the most significant 4 bits of the Timestamp.
-#[derive(Debug, Eq, PartialEq, Ord, PartialOrd, Copy, Clone)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum Version {
     /// The time-based version specified in this document.
     TIME = 1,
@@ -153,25 +145,20 @@ pub enum Version {
     SHA1,
 }
 
-/// Timestamp represented by Coordinated Universal Time (UTC)
+/// Represented by Coordinated Universal Time (UTC)
 /// as a count of 100-ns intervals from the system-time.
-#[derive(Debug)]
-pub struct Timestamp(pub u64);
+#[derive(Debug, Eq, PartialEq)]
+pub struct Timestamp(u64);
 
 impl Timestamp {
-    /// Generate new 60-bit value from the system-time.
     pub fn new() -> u64 {
-        let nano = SystemTime::now()
+        let utc = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
             .checked_add(std::time::Duration::from_nanos(UTC_EPOCH))
             .unwrap()
             .as_nanos();
-        (nano & 0xffff_ffff_ffff_fff) as u64
-    }
-
-    pub fn duration(&self) -> std::time::Duration {
-        std::time::Duration::from_nanos(self.0)
+        (utc & 0xffff_ffff_ffff_fff) as u64
     }
 }
 
@@ -205,7 +192,7 @@ impl UUID {
     ]);
 }
 
-impl fmt::LowerHex for UUID {
+impl fmt::Display for UUID {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             fmt,
@@ -230,32 +217,7 @@ impl fmt::LowerHex for UUID {
     }
 }
 
-impl fmt::UpperHex for UUID {
-    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            fmt,
-            "{:02X}{:02X}{:02X}{:02X}-{:02X}{:02X}-{:02X}{:02X}-{:02X}{:02X}-{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}",
-            self.0[0],
-            self.0[1],
-            self.0[2],
-            self.0[3],
-            self.0[4],
-            self.0[5],
-            self.0[6],
-            self.0[7],
-            self.0[8],
-            self.0[9],
-            self.0[10],
-            self.0[11],
-            self.0[12],
-            self.0[13],
-            self.0[14],
-            self.0[15],
-        )
-    }
-}
-
-/// ClockSeq is used to avoid duplicates that could arise when the clock
+/// Used to avoid duplicates that could arise when the clock
 /// is set backwards in time.
 pub struct ClockSeq(u16);
 
@@ -265,25 +227,15 @@ impl ClockSeq {
     }
 }
 
-/// the clock sequence is used to help avoid duplicates that could arise
+/// The clock sequence is used to help avoid duplicates that could arise
 /// when the clock is set backwards in time or if the node ID changes.
 pub struct Node([u8; 6]);
 
-impl fmt::LowerHex for Node {
+impl fmt::Display for Node {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             fmt,
             "{:02x}-{:02x}-{:02x}-{:02x}-{:02x}-{:02x}",
-            self.0[0], self.0[1], self.0[2], self.0[3], self.0[4], self.0[5],
-        )
-    }
-}
-
-impl fmt::UpperHex for Node {
-    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            fmt,
-            "{:02X}-{:02X}-{:02X}-{:02X}-{:02X}-{:02X}",
             self.0[0], self.0[1], self.0[2], self.0[3], self.0[4], self.0[5],
         )
     }
@@ -304,8 +256,9 @@ mod tests {
     #[test]
     fn test_node() {
         let node = Node([00, 42, 53, 13, 19, 128]);
-        assert_eq!(format!("{:x}", node), "00-2a-35-0d-13-80");
-        assert_eq!(format!("{:X}", node), "00-2A-35-0D-13-80")
+
+        assert_eq!(format!("{}", node), "00-2a-35-0d-13-80");
+        assert_eq!(format!("{}", node).to_uppercase(), "00-2A-35-0D-13-80")
     }
 
     #[test]
@@ -325,11 +278,5 @@ mod tests {
         for id in uuid.iter() {
             assert!(is_valid(&id.to_ascii_uppercase()))
         }
-    }
-
-    #[test]
-    fn test_get_time() {
-        let uuid = UUID::v1();
-        assert!(uuid.get_time().0 > 0);
     }
 }
