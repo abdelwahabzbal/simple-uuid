@@ -18,9 +18,9 @@
 
 #![doc(html_root_url = "https://docs.rs/uuid-rs")]
 
-mod name_based;
-mod random_based;
-mod time_based;
+mod name;
+mod random;
+mod time;
 
 use core::fmt;
 use core::sync::atomic;
