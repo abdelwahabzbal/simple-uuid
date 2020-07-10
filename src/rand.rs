@@ -5,7 +5,7 @@ use rand;
 
 impl UUID {
     /// Generate a UUID from truly random numbers.
-    pub fn new_v4() -> Layout {
+    pub fn v4() -> Layout {
         let rng = rand::random::<u128>();
         let rand = rng.to_be_bytes();
         Layout {
@@ -25,9 +25,9 @@ impl UUID {
 
 /// Creates a lower string for `UUID` version-4.
 #[macro_export]
-macro_rules! uuid_v4 {
+macro_rules! v4 {
     () => {
-        format!("{}", $crate::UUID::new_v4().as_bytes())
+        format!("{}", $crate::UUID::v4().as_bytes())
     };
 }
 
@@ -36,8 +36,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_new_v4() {
-        let uuid = UUID::new_v4();
+    fn test_v4() {
+        let uuid = UUID::v4();
         assert_eq!(uuid.get_version(), Some(Version::RAND));
         assert_eq!(uuid.get_variant(), Some(Variant::RFC));
     }

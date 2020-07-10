@@ -1,14 +1,18 @@
-#[cfg(feature = "hash_md5")]
+#![cfg(any(feature = "hash_md5", feauture = "hash_sha1"))]
+
+// #[cfg(feature = "hash_md5")]
 use md5;
-#[cfg(feature = "hash_sha1")]
+// #[cfg(feature = "hash_sha1")]
 use sha1::Sha1;
 
+// #[cfg(any(feature = "hash_md5", feauture = "hash_sha1"))]
 use crate::{Layout, Variant, Version, UUID};
 
+// #[cfg(any(feature = "hash_md5", feauture = "hash_sha1"))]
 impl UUID {
     /// Generate a UUID by hashing a namespace identifier and name uses MD5.
-    #[cfg(feature = "hash_md5")]
-    pub fn new_v3(any: &str, namespace: UUID) -> Layout {
+    // #[cfg(feature = "hash_md5")]
+    pub fn v3(any: &str, namespace: UUID) -> Layout {
         let hash = md5::compute(Self::data(any, namespace)).0;
         Layout {
             field_low: ((hash[0] as u32) << 24)
@@ -25,8 +29,8 @@ impl UUID {
     }
 
     /// Generate a UUID by hashing a namespace identifier and name uses SHA1.
-    #[cfg(feature = "hash_sha1")]
-    pub fn new_v5(any: &str, namespace: UUID) -> Layout {
+    // #[cfg(feature = "hash_sha1")]
+    pub fn v5(any: &str, namespace: UUID) -> Layout {
         let hash = Sha1::from(Self::data(any, namespace)).digest().bytes();
         Layout {
             field_low: ((hash[0] as u32) << 24)
@@ -42,35 +46,38 @@ impl UUID {
         }
     }
 
+    // #[cfg(any(feature = "hash_md5", feauture = "hash_sha1"))]
     fn data(any: &str, namespace: UUID) -> String {
         format!("{}", namespace) + any
     }
 }
 
 /// Creates a lower string for `UUID` version-3.
-#[cfg(feature = "hash_md5")]
+// #[cfg(feature = "hash_md5")]
 #[macro_export]
-macro_rules! uuid_v3 {
+macro_rules! v3 {
     ($any:expr, $namespace:expr) => {
-        format!("{}", $crate::UUID::new_v3($any, $namespace).as_bytes())
+        format!("{}", $crate::UUID::v3($any, $namespace).as_bytes())
     };
 }
 
 /// Creates a lower string for `UUID` version-5.
-#[cfg(feature = "hash_sha1")]
+// #[cfg(feature = "hash_sha1")]
 #[macro_export]
-macro_rules! uuid_v5 {
+macro_rules! v5 {
     ($any:expr, $namespace:expr) => {
-        format!("{}", $crate::UUID::new_v5($any, $namespace).as_bytes())
+        format!("{}", $crate::UUID::v5($any, $namespace).as_bytes())
     };
 }
 
 #[cfg(test)]
+// #[cfg(any(feature = "hash_md5", feauture = "hash_sha1"))]
 mod tests {
     use super::*;
 
     #[test]
-    fn test_new_v3() {
+    // #[cfg(feature = "hash_md5")]
+    fn test_v3() {
         let namespace = [
             UUID::NAMESPACE_DNS,
             UUID::NAMESPACE_OID,
@@ -79,18 +86,14 @@ mod tests {
         ];
 
         for s in namespace.iter() {
-            assert_eq!(UUID::new_v3("any", *s).get_version(), Some(Version::MD5));
-            assert_eq!(UUID::new_v3("any", *s).get_variant(), Some(Variant::RFC));
-        }
-
-        for s in namespace.iter() {
-            assert_eq!(UUID::new_v5("any", *s).get_version(), Some(Version::SHA1));
-            assert_eq!(UUID::new_v5("any", *s).get_variant(), Some(Variant::RFC));
+            assert_eq!(UUID::v3("any", *s).get_version(), Some(Version::MD5));
+            assert_eq!(UUID::v3("any", *s).get_variant(), Some(Variant::RFC));
         }
     }
 
     #[test]
-    fn test_new_v5() {
+    // #[cfg(feature = "hash_sha1")]
+    fn test_v5() {
         let namespace = [
             UUID::NAMESPACE_DNS,
             UUID::NAMESPACE_OID,
@@ -99,8 +102,8 @@ mod tests {
         ];
 
         for s in namespace.iter() {
-            assert_eq!(UUID::new_v5("any", *s).get_version(), Some(Version::SHA1));
-            assert_eq!(UUID::new_v5("any", *s).get_variant(), Some(Variant::RFC));
+            assert_eq!(UUID::v5("any", *s).get_version(), Some(Version::SHA1));
+            assert_eq!(UUID::v5("any", *s).get_variant(), Some(Variant::RFC));
         }
     }
 }

@@ -5,21 +5,21 @@
 //!
 //! ```toml
 //! [dependencies]
-//! uuid = { version = "0.5.0", features = ["random"] }
+//! uuid = { version = "0.6.0", features = ["random"] }
 //! ```
 //!
 //! ```rust
-//! use uuid_rs::uuid_v4;
+//! use uuid_rs::v4;
 //!
 //! fn main() {
-//!     println!("{}", uuid_v4!());
+//!     println!("{}", v4!());
 //! }
 //! ```
 
 #![doc(html_root_url = "https://docs.rs/uuid-rs")]
 
 mod name;
-mod random;
+mod rand;
 mod time;
 
 use core::fmt;
@@ -107,6 +107,13 @@ impl Layout {
             _ => None,
         }
     }
+
+    pub fn get_time(&self) -> u64 {
+        let m = ((self.field_high_and_version) as u64) << 48
+            | (self.field_mid as u64) << 32
+            | self.field_low as u64;
+        m.checked_sub(UTC_EPOCH).unwrap()
+    }
 }
 
 /// Domain is security-domain-relative name.
@@ -158,12 +165,12 @@ impl Timestamp {
             .checked_add(std::time::Duration::from_nanos(UTC_EPOCH))
             .unwrap()
             .as_nanos();
-        (utc & 0xffff_ffff_ffff_fff) as u64
+        (utc & 0xffff_ffff_ffff_ffff) as u64
     }
 }
 
 /// Is a 128-bit number used to identify information in computer systems.
-#[derive(Debug, Ord, PartialOrd, Eq, PartialEq, Copy, Clone)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub struct UUID([u8; 16]);
 
 impl UUID {
@@ -242,6 +249,12 @@ impl fmt::Display for Node {
 }
 
 #[cfg(test)]
+#[cfg(all(
+    feature = "hash_md5",
+    feauture = "hash_sha1",
+    feauture = "random",
+    feauture = "mac"
+))]
 mod tests {
     use super::*;
     use regex::Regex;
@@ -264,11 +277,11 @@ mod tests {
     #[test]
     fn test_is_valid_uuid() {
         let uuid = [
-            uuid_v1!(),
-            uuid_v2!(Domain::PERSON),
-            uuid_v3!("any", UUID::NAMESPACE_URL),
-            uuid_v4!(),
-            uuid_v5!("any", UUID::NAMESPACE_DNS),
+            v1!(),
+            v2!(Domain::PERSON),
+            v3!("any", UUID::NAMESPACE_URL),
+            v4!(),
+            v5!("any", UUID::NAMESPACE_DNS),
         ];
 
         for id in uuid.iter() {

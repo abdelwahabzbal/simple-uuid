@@ -10,14 +10,14 @@ This crate generates and inspects UUIDs based on
 ## Install
 ```TOML
 [dependencies]
-uuid-rs = { version = "0.5.0", features = ["random"] }
+uuid-rs = { version = "0.6.0", features = ["random"] }
 ```
 
 ## Usage
 ```Rust
-use uuid_rs::uuid_v4;
+use uuid_rs::v4;
 
-println!("{}", uuid_v4!())
+println!("{}", v4!())
 ```
 
 ## Security
