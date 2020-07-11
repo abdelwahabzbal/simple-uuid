@@ -52,7 +52,7 @@ impl UUID {
     }
 }
 
-/// Creates a lower string for `UUID` version-3.
+/// Creates a lower `String` for UUID version-3.
 // #[cfg(feature = "hash_md5")]
 #[macro_export]
 macro_rules! v3 {
@@ -61,7 +61,7 @@ macro_rules! v3 {
     };
 }
 
-/// Creates a lower string for `UUID` version-5.
+/// Creates a lower `String` for UUID version-5.
 // #[cfg(feature = "hash_sha1")]
 #[macro_export]
 macro_rules! v5 {

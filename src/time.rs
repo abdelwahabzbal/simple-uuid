@@ -54,7 +54,7 @@ impl UUID {
     }
 }
 
-/// Creates a lower string for `UUID` version-1.
+/// Creates a lower `String` for UUID version-1.
 #[macro_export]
 macro_rules! v1 {
     () => {
@@ -62,7 +62,7 @@ macro_rules! v1 {
     };
 }
 
-/// Creates a lower string for `UUID` version-2.
+/// Creates a lower `String` for UUID version-2.
 #[macro_export]
 macro_rules! v2 {
     ($domain:expr) => {

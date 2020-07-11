@@ -159,6 +159,7 @@ pub enum Version {
 pub struct Timestamp(u64);
 
 impl Timestamp {
+    /// Generate UTC time.
     pub fn new() -> u64 {
         let utc = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
@@ -166,6 +167,7 @@ impl Timestamp {
             .checked_add(std::time::Duration::from_nanos(UTC_EPOCH))
             .unwrap()
             .as_nanos();
+
         (utc & 0xffff_ffff_ffff_ffff) as u64
     }
 }
@@ -230,6 +232,7 @@ impl fmt::Display for UUID {
 pub struct ClockSeq(u16);
 
 impl ClockSeq {
+    /// Generate new atomic random value.
     pub fn new(r: u16) -> u16 {
         atomic::AtomicU16::new(r).fetch_add(1, atomic::Ordering::AcqRel)
     }

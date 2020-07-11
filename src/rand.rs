@@ -23,7 +23,7 @@ impl UUID {
     }
 }
 
-/// Creates a lower string for `UUID` version-4.
+/// Creates a lower `String` for UUID version-4.
 #[macro_export]
 macro_rules! v4 {
     () => {
