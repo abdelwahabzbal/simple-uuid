@@ -6,12 +6,12 @@ use rand;
 use crate::{ClockSeq, Domain, Layout, Timestamp, Variant, Version, UUID};
 
 impl UUID {
-    /// Generate a time-based and MAC-address version UUID.
+    /// Generate a time based and MAC-address UUID.
     pub fn v1() -> Layout {
         Self::from_mac(Version::TIME, Self::mac())
     }
 
-    /// Generate a time-based, MAC-address and DCE-security version UUID.
+    /// Generate a time based, MAC-address and DCE-security UUID.
     ///
     /// NOTE: RFC-4122 reserves version-2 for `DCE-security` UUIDs;
     /// but it does not provide any details.
@@ -27,6 +27,7 @@ impl UUID {
         }
     }
 
+    /// Generate a time based UUID with a user defined MAC-address.
     pub fn from_mac(v: Version, mac: [u8; 6]) -> Layout {
         let utc = Timestamp::new();
         let clock_seq = Self::clock_seq_high_and_reserved(Variant::RFC as u8);
@@ -110,14 +111,6 @@ mod tests {
                 .unwrap()
                 .as_secs(),
             std::time::Duration::from_nanos(UUID::v1().get_time()).as_secs()
-        );
-
-        assert!(
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
-                .as_nanos()
-                < std::time::Duration::from_nanos(UUID::v1().get_time()).as_nanos()
         );
     }
 }

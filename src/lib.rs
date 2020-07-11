@@ -108,6 +108,7 @@ impl Layout {
         }
     }
 
+    /// Get timestamp where UUID generated in.
     pub fn get_time(&self) -> u64 {
         let m = ((self.field_high_and_version) as u64) << 48
             | (self.field_mid as u64) << 32
@@ -117,7 +118,7 @@ impl Layout {
 }
 
 /// Domain is security-domain-relative name.
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub enum Domain {
     PERSON = 0,
     GROUP,
