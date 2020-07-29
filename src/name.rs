@@ -1,17 +1,12 @@
 #![cfg(any(feature = "hash_md5", feauture = "hash_sha1"))]
 
-// #[cfg(feature = "hash_md5")]
 use md5;
-// #[cfg(feature = "hash_sha1")]
 use sha1::Sha1;
 
-// #[cfg(any(feature = "hash_md5", feauture = "hash_sha1"))]
 use crate::{Layout, Variant, Version, UUID};
 
-// #[cfg(any(feature = "hash_md5", feauture = "hash_sha1"))]
 impl UUID {
     /// Generate a UUID by hashing a namespace identifier and name uses MD5.
-    // #[cfg(feature = "hash_md5")]
     pub fn v3(any: &str, namespace: UUID) -> Layout {
         let hash = md5::compute(Self::data(any, namespace)).0;
         Layout {
@@ -29,7 +24,6 @@ impl UUID {
     }
 
     /// Generate a UUID by hashing a namespace identifier and name uses SHA1.
-    // #[cfg(feature = "hash_sha1")]
     pub fn v5(any: &str, namespace: UUID) -> Layout {
         let hash = Sha1::from(Self::data(any, namespace)).digest().bytes();
         Layout {
@@ -46,14 +40,12 @@ impl UUID {
         }
     }
 
-    // #[cfg(any(feature = "hash_md5", feauture = "hash_sha1"))]
     fn data(any: &str, namespace: UUID) -> String {
         format!("{}", namespace) + any
     }
 }
 
 /// Creates a lower `String` for UUID version-3.
-// #[cfg(feature = "hash_md5")]
 #[macro_export]
 macro_rules! v3 {
     ($any:expr, $namespace:expr) => {
@@ -62,7 +54,6 @@ macro_rules! v3 {
 }
 
 /// Creates a lower `String` for UUID version-5.
-// #[cfg(feature = "hash_sha1")]
 #[macro_export]
 macro_rules! v5 {
     ($any:expr, $namespace:expr) => {
@@ -71,12 +62,10 @@ macro_rules! v5 {
 }
 
 #[cfg(test)]
-// #[cfg(any(feature = "hash_md5", feauture = "hash_sha1"))]
 mod tests {
     use super::*;
 
     #[test]
-    // #[cfg(feature = "hash_md5")]
     fn test_v3() {
         let namespace = [
             UUID::NAMESPACE_DNS,
@@ -92,7 +81,6 @@ mod tests {
     }
 
     #[test]
-    // #[cfg(feature = "hash_sha1")]
     fn test_v5() {
         let namespace = [
             UUID::NAMESPACE_DNS,

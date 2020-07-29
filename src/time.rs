@@ -27,7 +27,7 @@ impl UUID {
         }
     }
 
-    /// Generate a time based UUID with a user defined MAC-address.
+    /// Generate a time based UUID (version 1|2) with a user defined MAC-address.
     pub fn from_mac(v: Version, mac: [u8; 6]) -> Layout {
         let utc = Timestamp::new();
         let clock_seq = Self::clock_seq_high_and_reserved(Variant::RFC as u8);
@@ -104,13 +104,19 @@ mod tests {
     }
 
     #[test]
-    fn test_get_time() {
+    fn test_time() {
         assert_eq!(
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap()
                 .as_secs(),
             std::time::Duration::from_nanos(UUID::v1().get_time()).as_secs()
+        );
+        assert_ne!(
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap(),
+            std::time::Duration::from_nanos(UUID::v1().get_time())
         );
     }
 }

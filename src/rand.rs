@@ -29,6 +29,9 @@ macro_rules! v4 {
     () => {
         format!("{}", $crate::UUID::v4().as_bytes())
     };
+    (expr:lower) => {
+        format!("{}", $crate::UUID::v4().as_bytes().to_lower())
+    };
 }
 
 #[cfg(test)]

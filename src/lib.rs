@@ -110,10 +110,11 @@ impl Layout {
 
     /// Get timestamp where UUID generated in.
     pub fn get_time(&self) -> u64 {
-        let m = ((self.field_high_and_version) as u64) << 48
+        let t = ((self.field_high_and_version) as u64) << 48
             | (self.field_mid as u64) << 32
             | self.field_low as u64;
-        m.checked_sub(UTC_EPOCH).unwrap()
+
+        t.checked_sub(UTC_EPOCH).unwrap()
     }
 }
 
@@ -159,7 +160,7 @@ pub enum Version {
 pub struct Timestamp(u64);
 
 impl Timestamp {
-    /// Generate UTC time.
+    /// Generate UTC timestamp.
     pub fn new() -> u64 {
         let utc = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
@@ -168,7 +169,7 @@ impl Timestamp {
             .unwrap()
             .as_nanos();
 
-        (utc & 0xffff_ffff_ffff_ffff) as u64
+        (utc & 0xffff_ffff_ffff_fff) as u64
     }
 }
 
@@ -252,13 +253,13 @@ impl fmt::Display for Node {
     }
 }
 
-#[cfg(test)]
-#[cfg(all(
+#[cfg(any(
     feature = "hash_md5",
     feauture = "hash_sha1",
     feauture = "random",
     feauture = "mac"
 ))]
+#[cfg(test)]
 mod tests {
     use super::*;
     use regex::Regex;
@@ -285,6 +286,7 @@ mod tests {
             v2!(Domain::PERSON),
             v3!("any", UUID::NAMESPACE_URL),
             v4!(),
+            v4!(),
             v5!("any", UUID::NAMESPACE_DNS),
         ];
 
@@ -295,5 +297,7 @@ mod tests {
         for id in uuid.iter() {
             assert!(is_valid(&id.to_uppercase()))
         }
+
+        // assert(v4!(lower))
     }
 }
