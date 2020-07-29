@@ -27,7 +27,7 @@ impl UUID {
         }
     }
 
-    /// Generate a time based UUID (version 1|2) with a user defined MAC-address.
+    /// Generate a time based UUID version-1/2 with a user defined MAC-address.
     pub fn from_mac(v: Version, mac: [u8; 6]) -> Layout {
         let utc = Timestamp::new();
         let clock_seq = Self::clock_seq_high_and_reserved(Variant::RFC as u8);
