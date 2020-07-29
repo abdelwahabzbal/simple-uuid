@@ -116,6 +116,11 @@ impl Layout {
 
         t.checked_sub(UTC_EPOCH).unwrap()
     }
+
+    /// Get the MAC-address where UUID generated with.
+    pub fn get_mac(&self) -> Node {
+        Node(self.node)
+    }
 }
 
 /// Domain is security-domain-relative name.

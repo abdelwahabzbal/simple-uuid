@@ -104,6 +104,14 @@ mod tests {
     }
 
     #[test]
+    fn test_from_mac() {
+        let fm = UUID::from_mac(Version::TIME, [0x03, 0x2a, 0x35, 0x0d, 0x13, 0x80]);
+        assert_eq!(fm.get_version(), Some(Version::TIME));
+        assert_eq!(fm.get_mac().0, [0x03, 0x2a, 0x35, 0x0d, 0x13, 0x80]);
+        assert_eq!(format!("{}", fm.get_mac()), "03-2a-35-0d-13-80");
+    }
+
+    #[test]
     fn test_time() {
         assert_eq!(
             std::time::SystemTime::now()
