@@ -15,6 +15,7 @@ impl UUID {
     ///
     /// NOTE: RFC-4122 reserves version-2 for `DCE-security` UUIDs;
     /// but it does not provide any details.
+    ///
     pub fn v2(d: Domain) -> Layout {
         let utc = Timestamp::new();
         Layout {
@@ -112,7 +113,7 @@ mod tests {
     }
 
     #[test]
-    fn test_time() {
+    fn test_get_time() {
         assert_eq!(
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)

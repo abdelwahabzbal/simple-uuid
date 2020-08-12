@@ -279,7 +279,6 @@ mod tests {
     #[test]
     fn test_node_format() {
         let node = Node([00, 42, 53, 13, 19, 128]);
-
         assert_eq!(format!("{}", node), "00-2a-35-0d-13-80");
         assert_eq!(format!("{}", node).to_uppercase(), "00-2A-35-0D-13-80")
     }
@@ -302,7 +301,5 @@ mod tests {
         for id in uuid.iter() {
             assert!(is_valid(&id.to_uppercase()))
         }
-
-        // assert(v4!(lower))
     }
 }
