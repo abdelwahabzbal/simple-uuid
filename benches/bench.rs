@@ -12,13 +12,28 @@ use test::Bencher;
 use uuid_rs::{Domain, Version, UUID};
 
 #[bench]
-fn bench_v1(b: &mut Bencher) {
-    b.iter(|| UUID::v1());
+fn bench_new_v1(b: &mut Bencher) {
+    b.iter(|| UUID::new_v1());
 }
 
 #[bench]
-fn bench_v2(b: &mut Bencher) {
-    b.iter(|| UUID::v2(Domain::PERSON));
+fn bench_new_v2(b: &mut Bencher) {
+    b.iter(|| UUID::new_v2(Domain::PERSON));
+}
+
+#[bench]
+fn bench_new_v3(b: &mut Bencher) {
+    b.iter(|| UUID::new_v3("any", UUID::NAMESPACE_DNS));
+}
+
+#[bench]
+fn bench_new_v4(b: &mut Bencher) {
+    b.iter(|| UUID::new_v4());
+}
+
+#[bench]
+fn bench_new_v5(b: &mut Bencher) {
+    b.iter(|| UUID::new_v5("any", UUID::NAMESPACE_X500));
 }
 
 #[bench]
@@ -27,16 +42,6 @@ fn bench_from_mac(b: &mut Bencher) {
 }
 
 #[bench]
-fn bench_v3(b: &mut Bencher) {
-    b.iter(|| UUID::v3("any", UUID::NAMESPACE_DNS));
-}
-
-#[bench]
-fn bench_v4(b: &mut Bencher) {
-    b.iter(|| UUID::v4());
-}
-
-#[bench]
-fn bench_v5(b: &mut Bencher) {
-    b.iter(|| UUID::v5("any", UUID::NAMESPACE_X500));
+fn bench_from_utc(b: &mut Bencher) {
+    b.iter(|| UUID::from_utc(Version::TIME, 1234));
 }

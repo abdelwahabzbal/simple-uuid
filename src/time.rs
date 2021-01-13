@@ -6,17 +6,13 @@ use rand;
 use crate::{ClockSeq, Domain, Layout, Timestamp, Variant, Version, UUID};
 
 impl UUID {
-    /// Generate a time based and MAC-address UUID.
-    pub fn v1() -> Layout {
+    /// Generate a time-based and MAC-address UUID.
+    pub fn new_v1() -> Layout {
         Self::from_mac(Version::TIME, Self::mac())
     }
 
-    /// Generate a time based, MAC-address and DCE-security UUID.
-    ///
-    /// NOTE: RFC-4122 reserves version-2 for `DCE-security` UUIDs;
-    /// but it does not provide any details.
-    ///
-    pub fn v2(d: Domain) -> Layout {
+    /// Generate a time-based, MAC-address and DCE-security UUID.
+    pub fn new_v2(d: Domain) -> Layout {
         let utc = Timestamp::new();
         Layout {
             field_low: (utc & 0xffff_ffff) as u32,
@@ -28,14 +24,27 @@ impl UUID {
         }
     }
 
-    /// Generate a time based UUID version-1/2 with a user defined MAC-address.
-    pub fn from_mac(v: Version, mac: [u8; 6]) -> Layout {
+    /// Generate a custom time-based UUID.
+    pub fn from_utc(ver: Version, utc: u64) -> Layout {
+        let clock_seq = Self::clock_seq_high_and_reserved(Variant::RFC as u8);
+        Layout {
+            field_low: ((utc & 0xffff_ffff) as u32),
+            field_mid: ((utc >> 32 & 0xffff) as u16),
+            field_high_and_version: (utc >> 48 & 0xfff) as u16 | (ver as u16) << 12,
+            clock_seq_high_and_reserved: clock_seq.0,
+            clock_seq_low: clock_seq.1,
+            node: Self::mac(),
+        }
+    }
+
+    /// Generate a time-based UUID with a user defined MAC-address.
+    pub fn from_mac(ver: Version, mac: [u8; 6]) -> Layout {
         let utc = Timestamp::new();
         let clock_seq = Self::clock_seq_high_and_reserved(Variant::RFC as u8);
         Layout {
             field_low: ((utc & 0xffff_ffff) as u32),
             field_mid: ((utc >> 32 & 0xffff) as u16),
-            field_high_and_version: (utc >> 48 & 0xfff) as u16 | (v as u16) << 12,
+            field_high_and_version: (utc >> 48 & 0xfff) as u16 | (ver as u16) << 12,
             clock_seq_high_and_reserved: clock_seq.0,
             clock_seq_low: clock_seq.1,
             node: mac,
@@ -55,19 +64,19 @@ impl UUID {
     }
 }
 
-/// Creates a lower `String` for UUID version-1.
+/// Quick UUID version-1.
 #[macro_export]
 macro_rules! v1 {
     () => {
-        format!("{}", $crate::UUID::v1().as_bytes())
+        format!("{:x}", $crate::UUID::new_v1().as_bytes())
     };
 }
 
-/// Creates a lower `String` for UUID version-2.
+/// Quick UUID version-2.
 #[macro_export]
 macro_rules! v2 {
     ($domain:expr) => {
-        format!("{}", $crate::UUID::v2($domain).as_bytes())
+        format!("{:x}", $crate::UUID::new_v2($domain).as_bytes())
     };
 }
 
@@ -76,9 +85,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_v1() {
-        let uuid = UUID::v1();
-
+    fn test_new_v1() {
+        let uuid = UUID::new_v1();
         assert_eq!(uuid.get_version(), Some(Version::TIME));
         assert_eq!(uuid.get_variant(), Some(Variant::RFC));
 
@@ -95,37 +103,25 @@ mod tests {
     }
 
     #[test]
-    fn test_v2() {
-        let domain = [Domain::PERSON, Domain::GROUP, Domain::ORG];
-
-        for d in domain.iter() {
-            assert_eq!(UUID::v2(*d).get_version(), Some(Version::DCE));
-            assert_eq!(UUID::v2(*d).get_variant(), Some(Variant::RFC));
+    fn test_new_v2() {
+        let domains = [Domain::PERSON, Domain::GROUP, Domain::ORG];
+        for d in domains.iter() {
+            assert_eq!(UUID::new_v2(*d).get_version(), Some(Version::DCE));
+            assert_eq!(UUID::new_v2(*d).get_variant(), Some(Variant::RFC));
         }
     }
 
     #[test]
     fn test_from_mac() {
-        let fm = UUID::from_mac(Version::TIME, [0x03, 0x2a, 0x35, 0x0d, 0x13, 0x80]);
-        assert_eq!(fm.get_version(), Some(Version::TIME));
-        assert_eq!(fm.get_mac().0, [0x03, 0x2a, 0x35, 0x0d, 0x13, 0x80]);
-        assert_eq!(format!("{}", fm.get_mac()), "03-2a-35-0d-13-80");
+        let uuid = UUID::from_mac(Version::TIME, [0x03, 0x2a, 0x35, 0x0d, 0x13, 0x80]);
+        assert_eq!(uuid.get_version(), Some(Version::TIME));
+        assert_eq!(uuid.get_mac().0, [0x03, 0x2a, 0x35, 0x0d, 0x13, 0x80]);
     }
 
     #[test]
-    fn test_get_time() {
-        assert_eq!(
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
-                .as_secs(),
-            std::time::Duration::from_nanos(UUID::v1().get_time()).as_secs()
-        );
-        assert_ne!(
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap(),
-            std::time::Duration::from_nanos(UUID::v1().get_time())
-        );
+    fn test_from_utc() {
+        let uuid = UUID::from_utc(Version::TIME, 1_234_567_u64);
+        assert_eq!(uuid.get_version(), Some(Version::TIME));
+        assert_eq!(uuid.get_time(), 1_234_567_u64);
     }
 }

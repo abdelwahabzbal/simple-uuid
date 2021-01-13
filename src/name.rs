@@ -7,7 +7,7 @@ use crate::{Layout, Variant, Version, UUID};
 
 impl UUID {
     /// Generate a UUID by hashing a namespace identifier and name uses MD5.
-    pub fn v3(any: &str, namespace: UUID) -> Layout {
+    pub fn new_v3(any: &str, namespace: UUID) -> Layout {
         let hash = md5::compute(Self::data(any, namespace)).0;
         Layout {
             field_low: ((hash[0] as u32) << 24)
@@ -24,7 +24,7 @@ impl UUID {
     }
 
     /// Generate a UUID by hashing a namespace identifier and name uses SHA1.
-    pub fn v5(any: &str, namespace: UUID) -> Layout {
+    pub fn new_v5(any: &str, namespace: UUID) -> Layout {
         let hash = Sha1::from(Self::data(any, namespace)).digest().bytes();
         Layout {
             field_low: ((hash[0] as u32) << 24)
@@ -41,23 +41,23 @@ impl UUID {
     }
 
     fn data(any: &str, namespace: UUID) -> String {
-        format!("{}", namespace) + any
+        format!("{:x}", namespace) + any
     }
 }
 
-/// Creates a lower `String` for UUID version-3.
+/// Quick UUID version-3.
 #[macro_export]
 macro_rules! v3 {
     ($any:expr, $namespace:expr) => {
-        format!("{}", $crate::UUID::v3($any, $namespace).as_bytes())
+        format!("{:x}", $crate::UUID::new_v3($any, $namespace).as_bytes())
     };
 }
 
-/// Creates a lower `String` for UUID version-5.
+/// Quick UUID version-5.
 #[macro_export]
 macro_rules! v5 {
     ($any:expr, $namespace:expr) => {
-        format!("{}", $crate::UUID::v5($any, $namespace).as_bytes())
+        format!("{:x}", $crate::UUID::new_v5($any, $namespace).as_bytes())
     };
 }
 
@@ -66,32 +66,30 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_v3() {
+    fn test_new_v3() {
         let namespace = [
             UUID::NAMESPACE_DNS,
             UUID::NAMESPACE_OID,
             UUID::NAMESPACE_URL,
             UUID::NAMESPACE_X500,
         ];
-
         for s in namespace.iter() {
-            assert_eq!(UUID::v3("any", *s).get_version(), Some(Version::MD5));
-            assert_eq!(UUID::v3("any", *s).get_variant(), Some(Variant::RFC));
+            assert_eq!(UUID::new_v3("any", *s).get_version(), Some(Version::MD5));
+            assert_eq!(UUID::new_v3("any", *s).get_variant(), Some(Variant::RFC));
         }
     }
 
     #[test]
-    fn test_v5() {
+    fn test_new_v5() {
         let namespace = [
             UUID::NAMESPACE_DNS,
             UUID::NAMESPACE_OID,
             UUID::NAMESPACE_URL,
             UUID::NAMESPACE_X500,
         ];
-
         for s in namespace.iter() {
-            assert_eq!(UUID::v5("any", *s).get_version(), Some(Version::SHA1));
-            assert_eq!(UUID::v5("any", *s).get_variant(), Some(Variant::RFC));
+            assert_eq!(UUID::new_v5("any", *s).get_version(), Some(Version::SHA1));
+            assert_eq!(UUID::new_v5("any", *s).get_variant(), Some(Variant::RFC));
         }
     }
 }

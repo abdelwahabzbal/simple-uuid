@@ -1,4 +1,4 @@
-## UUID ![](https://github.com/awh6al/uuid-rs/workflows/uuid-rs/badge.svg)
+## UUID ![](https://github.com/wohabz/simid/workflows/uuid-rs/badge.svg)
 A universally unique identifier (UUID) is a 128-bit number used to identify
 information in computer systems. The term globally unique identifier (GUID)
 is also used.
@@ -10,12 +10,12 @@ This crate generates and inspects UUIDs based on
 ## Install
 ```TOML
 [dependencies]
-uuid-rs = { version = "0.6.2", features = ["random"] }
+simid = { version = "0.1.0", features = ["random"] }
 ```
 
 ## Usage
 ```Rust
-use uuid_rs::v4;
+use simid::v4;
 
 println!("{}", v4!())
 ```

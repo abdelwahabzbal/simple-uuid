@@ -5,11 +5,11 @@
 //!
 //! ```toml
 //! [dependencies]
-//! uuid = { version = "0.6.0", features = ["random"] }
+//! uuid = { version = "0.1.0", features = ["random"] }
 //! ```
 //!
 //! ```rust
-//! use uuid_rs::v4;
+//! use simid::v4;
 //!
 //! fn main() {
 //!     println!("{}", v4!());
@@ -108,16 +108,12 @@ impl Layout {
         }
     }
 
-    /// Get timestamp where UUID generated in.
+    /// Get timestamp where the UUID generated in.
     pub fn get_time(&self) -> u64 {
-        let t = ((self.field_high_and_version) as u64) << 48
-            | (self.field_mid as u64) << 32
-            | self.field_low as u64;
-
-        t.checked_sub(UTC_EPOCH).unwrap()
+        self.field_low as u64
     }
 
-    /// Get the MAC-address where UUID generated with.
+    /// Get the MAC-address where the UUID generated with.
     pub fn get_mac(&self) -> Node {
         Node(self.node)
     }
@@ -136,7 +132,7 @@ pub enum Domain {
 pub enum Variant {
     /// Reserved, NCS backward compatibility.
     NCS = 0,
-    /// The variant specified in rfc4122 document.
+    /// The variant specified in `rfc4122` document.
     RFC,
     /// Reserved, Microsoft Corporation backward compatibility.
     MS,
@@ -147,15 +143,15 @@ pub enum Variant {
 /// Version represents the type of UUID, and is in the most significant 4 bits of the Timestamp.
 #[derive(Debug, Eq, PartialEq)]
 pub enum Version {
-    /// The time-based version specified in this document.
+    /// The time-based version specified in `rfc4122` document.
     TIME = 1,
     /// DCE Security version, with embedded POSIX UIDs.
     DCE,
-    /// The name-based version specified in rfc4122 document that uses MD5 hashing.
+    /// The name-based version specified in `rfc4122` document that uses MD5 hashing.
     MD5,
-    /// The randomly or pseudo-randomly generated version specified in rfc4122 document.
+    /// The randomly or pseudo-randomly generated version specified in `rfc4122` document.
     RAND,
-    /// The name-based version specified in rfc4122 document that uses SHA-1 hashing.
+    /// The name-based version specified in `rfc4122`document that uses SHA-1 hashing.
     SHA1,
 }
 
@@ -174,7 +170,7 @@ impl Timestamp {
             .unwrap()
             .as_nanos();
 
-        (utc & 0xffff_ffff_ffff_fff) as u64
+        (utc & 0xffff_ffff_ffff_ffff) as u64
     }
 }
 
@@ -183,6 +179,9 @@ impl Timestamp {
 pub struct UUID([u8; 16]);
 
 impl UUID {
+    /// A special case for UUID.
+    pub const NIL: Self = UUID([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+
     /// UUID namespace for domain name system (DNS).
     pub const NAMESPACE_DNS: Self = UUID([
         0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30,
@@ -208,11 +207,16 @@ impl UUID {
     ]);
 }
 
+/// NOTE: This is not a valid UUID format.
 impl fmt::Display for UUID {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             fmt,
-            "{:02x}{:02x}{:02x}{:02x}-{:02x}{:02x}-{:02x}{:02x}-{:02x}{:02x}-{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}",
+            "{:02x}{:02x}{:02x}{:02x}
+            {:02x}{:02x}
+            {:02x}{:02x}
+            {:02x}{:02x}
+            {:02x}{:02x}{:02x}{:02x}{:02x}{:02x}",
             self.0[0],
             self.0[1],
             self.0[2],
@@ -233,8 +237,66 @@ impl fmt::Display for UUID {
     }
 }
 
-/// Used to avoid duplicates that could arise when the clock
-/// is set backwards in time.
+impl fmt::LowerHex for UUID {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            fmt,
+            "{:02x}{:02x}{:02x}{:02x}
+            -{:02x}{:02x}
+            -{:02x}{:02x}
+            -{:02x}{:02x}
+            -{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}",
+            self.0[0],
+            self.0[1],
+            self.0[2],
+            self.0[3],
+            self.0[4],
+            self.0[5],
+            self.0[6],
+            self.0[7],
+            self.0[8],
+            self.0[9],
+            self.0[10],
+            self.0[11],
+            self.0[12],
+            self.0[13],
+            self.0[14],
+            self.0[15],
+        )
+    }
+}
+
+impl fmt::UpperExp for UUID {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            fmt,
+            "{:02X}{:02X}{:02X}{:02X}
+            -{:02X}{:02X}
+            -{:02X}{:02X}
+            -{:02X}{:02X}
+            -{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}",
+            self.0[0],
+            self.0[1],
+            self.0[2],
+            self.0[3],
+            self.0[4],
+            self.0[5],
+            self.0[6],
+            self.0[7],
+            self.0[8],
+            self.0[9],
+            self.0[10],
+            self.0[11],
+            self.0[12],
+            self.0[13],
+            self.0[14],
+            self.0[15],
+        )
+    }
+}
+
+/// Used to avoid duplicates that could arise when the clock is
+/// set backwards in time.
 pub struct ClockSeq(u16);
 
 impl ClockSeq {
@@ -252,54 +314,28 @@ impl fmt::Display for Node {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             fmt,
+            "{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}",
+            self.0[0], self.0[1], self.0[2], self.0[3], self.0[4], self.0[5],
+        )
+    }
+}
+
+impl fmt::LowerHex for Node {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            fmt,
             "{:02x}-{:02x}-{:02x}-{:02x}-{:02x}-{:02x}",
             self.0[0], self.0[1], self.0[2], self.0[3], self.0[4], self.0[5],
         )
     }
 }
 
-#[cfg(any(
-    feature = "hash_md5",
-    feauture = "hash_sha1",
-    feauture = "random",
-    feauture = "mac"
-))]
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use regex::Regex;
-
-    fn is_valid(s: &str) -> bool {
-        let regex = Regex::new(
-            r"^(?i)(urn:uuid:)?[0-9a-f]{8}\-[0-9a-f]{4}\-[0-5]{1}[0-9a-f]{3}\-[0-9a-f]{4}\-[0-9a-f]{12}$",
-        );
-        regex.unwrap().is_match(s)
-    }
-
-    #[test]
-    fn test_node_format() {
-        let node = Node([00, 42, 53, 13, 19, 128]);
-        assert_eq!(format!("{}", node), "00-2a-35-0d-13-80");
-        assert_eq!(format!("{}", node).to_uppercase(), "00-2A-35-0D-13-80")
-    }
-
-    #[test]
-    fn test_is_valid_uuid() {
-        let uuid = [
-            v1!(),
-            v2!(Domain::PERSON),
-            v3!("any", UUID::NAMESPACE_URL),
-            v4!(),
-            v4!(),
-            v5!("any", UUID::NAMESPACE_DNS),
-        ];
-
-        for id in uuid.iter() {
-            assert!(is_valid(id))
-        }
-
-        for id in uuid.iter() {
-            assert!(is_valid(&id.to_uppercase()))
-        }
+impl fmt::UpperHex for Node {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            fmt,
+            "{:02X}-{:02X}-{:02X}-{:02X}-{:02X}-{:02X}",
+            self.0[0], self.0[1], self.0[2], self.0[3], self.0[4], self.0[5],
+        )
     }
 }
