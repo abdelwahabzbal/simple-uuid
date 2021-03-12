@@ -5,18 +5,18 @@
 //!
 //! ```toml
 //! [dependencies]
-//! uuid = { version = "0.1.0", features = ["random"] }
+//! simple-uuid = { version = "0.1.0", features = ["random"] }
 //! ```
 //!
 //! ```rust
-//! use simid::v4;
+//! //use simple_uuid::v4;
 //!
-//! fn main() {
-//!     println!("{}", v4!());
-//! }
+//! //fn main() {
+//! //    println!("{}", v4!());
+//! //}
 //! ```
 
-#![doc(html_root_url = "https://docs.rs/uuid-rs")]
+#![doc(html_root_url = "https://docs.rs/simple-uuid")]
 
 mod name;
 mod rand;
@@ -30,7 +30,7 @@ use std::time::SystemTime;
 pub const UTC_EPOCH: u64 = 0x1B21_DD21_3814_000;
 
 /// The UUID format is 16 octets.
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Layout {
     /// The low field of the Timestamp.
     pub field_low: u32,
@@ -42,50 +42,45 @@ pub struct Layout {
     pub clock_seq_high_and_reserved: u8,
     /// The low field of the ClockSeq.
     pub clock_seq_low: u8,
-    /// IEEE 802 MAC address.
-    pub node: [u8; 6],
+    /// IEEE 802 MAC-address.
+    pub node: Node,
 }
 
 impl Layout {
     /// Returns the five field values of the UUID in big-endian order.
-    pub fn as_fields(&self) -> (u32, u16, u16, u16, u64) {
+    pub fn be_fields(&self) -> (u32, u16, u16, u16, Node) {
         (
             self.field_low,
             self.field_mid,
             self.field_high_and_version,
-            ((self.clock_seq_high_and_reserved as u16) << 8) | self.clock_seq_low as u16,
-            (self.node[0] as u64) << 40
-                | (self.node[1] as u64) << 32
-                | (self.node[2] as u64) << 24
-                | (self.node[3] as u64) << 16
-                | (self.node[4] as u64) << 8
-                | (self.node[5] as u64),
+            (self.clock_seq_high_and_reserved as u16) << 8 | self.clock_seq_low as u16,
+            self.node,
         )
     }
 
-    /// Returns a byte slice of this UUID content.
-    pub fn as_bytes(&self) -> UUID {
-        UUID([
-            self.field_low.to_be_bytes()[0],
-            self.field_low.to_be_bytes()[1],
-            self.field_low.to_be_bytes()[2],
-            self.field_low.to_be_bytes()[3],
-            self.field_mid.to_be_bytes()[0],
-            self.field_mid.to_be_bytes()[1],
-            self.field_high_and_version.to_be_bytes()[0],
-            self.field_high_and_version.to_be_bytes()[1],
-            self.clock_seq_high_and_reserved,
-            self.clock_seq_low,
-            self.node[0],
-            self.node[1],
-            self.node[2],
-            self.node[3],
-            self.node[4],
-            self.node[5],
-        ])
-    }
+    // /// Returns a byte slice of this UUID content.
+    // pub fn as_bytes(&self) -> UUID<T> {
+    //     UUID([
+    //         self.field_low.into().to_be_bytes()[0],
+    //         self.field_low.into().to_be_bytes()[1],
+    //         self.field_low.into().to_be_bytes()[2],
+    //         self.field_low.into().to_be_bytes()[3],
+    //         self.field_mid.into().to_be_bytes()[0],
+    //         self.field_mid.into().to_be_bytes()[1],
+    //         self.field_high_and_version.into().to_be_bytes()[0],
+    //         self.field_high_and_version.into().to_be_bytes()[1],
+    //         self.clock_seq_high_and_reserved.into(),
+    //         self.clock_seq_low.into(),
+    //         self.node[0].into(),
+    //         self.node[1].into(),
+    //         self.node[2].into(),
+    //         self.node[3].into(),
+    //         self.node[4].into(),
+    //         self.node[5].into(),
+    //     ])
+    // }
 
-    /// Get the version of the current generated UUID.
+    /// Version of the current generated UUID.
     pub fn get_version(&self) -> Option<Version> {
         match (self.field_high_and_version >> 12) & 0xf {
             0x01 => Some(Version::TIME),
@@ -97,7 +92,7 @@ impl Layout {
         }
     }
 
-    /// Get the variant field of the current generated UUID.
+    /// Variant field of the current generated UUID.
     pub fn get_variant(&self) -> Option<Variant> {
         match (self.clock_seq_high_and_reserved >> 4) & 0xf {
             0x00 => Some(Variant::NCS),
@@ -115,7 +110,7 @@ impl Layout {
 
     /// Get the MAC-address where the UUID generated with.
     pub fn get_mac(&self) -> Node {
-        Node(self.node)
+        self.node
     }
 }
 
@@ -157,11 +152,11 @@ pub enum Version {
 
 /// Represented by Coordinated Universal Time (UTC)
 /// as a count of 100-ns intervals from the system-time.
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Default)]
 pub struct Timestamp(u64);
 
 impl Timestamp {
-    /// Generate UTC timestamp.
+    /// Generate new UTC timestamp.
     pub fn new() -> u64 {
         let utc = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
@@ -170,82 +165,45 @@ impl Timestamp {
             .unwrap()
             .as_nanos();
 
-        (utc & 0xffff_ffff_ffff_ffff) as u64
+        (utc & 0xffff_ffff_ffff_fff) as u64
     }
 }
 
 /// Is a 128-bit number used to identify information in computer systems.
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone, Default)]
 pub struct UUID([u8; 16]);
 
 impl UUID {
-    /// A special case for UUID.
-    pub const NIL: Self = UUID([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
-
     /// UUID namespace for domain name system (DNS).
-    pub const NAMESPACE_DNS: Self = UUID([
+    pub const NAMESPACE_DNS: UUID = UUID([
         0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30,
         0xc8,
     ]);
 
     /// UUID namespace for ISO object identifiers (OIDs).
-    pub const NAMESPACE_OID: Self = UUID([
+    pub const NAMESPACE_OID: UUID = UUID([
         0x6b, 0xa7, 0xb8, 0x12, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30,
         0xc8,
     ]);
 
     /// UUID namespace for uniform resource locators (URLs).
-    pub const NAMESPACE_URL: Self = UUID([
+    pub const NAMESPACE_URL: UUID = UUID([
         0x6b, 0xa7, 0xb8, 0x11, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30,
         0xc8,
     ]);
 
     /// UUID namespace for X.500 distinguished names (DNs).
-    pub const NAMESPACE_X500: Self = UUID([
+    pub const NAMESPACE_X500: UUID = UUID([
         0x6b, 0xa7, 0xb8, 0x14, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30,
         0xc8,
     ]);
-}
-
-/// NOTE: This is not a valid UUID format.
-impl fmt::Display for UUID {
-    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            fmt,
-            "{:02x}{:02x}{:02x}{:02x}
-            {:02x}{:02x}
-            {:02x}{:02x}
-            {:02x}{:02x}
-            {:02x}{:02x}{:02x}{:02x}{:02x}{:02x}",
-            self.0[0],
-            self.0[1],
-            self.0[2],
-            self.0[3],
-            self.0[4],
-            self.0[5],
-            self.0[6],
-            self.0[7],
-            self.0[8],
-            self.0[9],
-            self.0[10],
-            self.0[11],
-            self.0[12],
-            self.0[13],
-            self.0[14],
-            self.0[15],
-        )
-    }
 }
 
 impl fmt::LowerHex for UUID {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             fmt,
-            "{:02x}{:02x}{:02x}{:02x}
-            -{:02x}{:02x}
-            -{:02x}{:02x}
-            -{:02x}{:02x}
-            -{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}",
+            "{:02x}{:02x}{:02x}{:02x}-{:02x}{:02x}-{:02x}{:02x}-{:02x}{:02x}-{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}",
             self.0[0],
             self.0[1],
             self.0[2],
@@ -266,15 +224,11 @@ impl fmt::LowerHex for UUID {
     }
 }
 
-impl fmt::UpperExp for UUID {
+impl fmt::UpperHex for UUID {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             fmt,
-            "{:02X}{:02X}{:02X}{:02X}
-            -{:02X}{:02X}
-            -{:02X}{:02X}
-            -{:02X}{:02X}
-            -{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}",
+            "{:02X}{:02X}{:02X}{:02X}-{:02X}{:02X}-{:02X}{:02X}-{:02X}{:02X}-{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}",
             self.0[0],
             self.0[1],
             self.0[2],
@@ -295,30 +249,44 @@ impl fmt::UpperExp for UUID {
     }
 }
 
-/// Used to avoid duplicates that could arise when the clock is
-/// set backwards in time.
+impl ToString for UUID {
+    fn to_string(&self) -> String {
+        format!(
+            "{:02}{:02}{:02}{:02}-{:02}{:02}-{:02}{:02}-{:02}{:02}-{:02}{:02}{:02}{:02}{:02}{:02}",
+            self.0[0],
+            self.0[1],
+            self.0[2],
+            self.0[3],
+            self.0[4],
+            self.0[5],
+            self.0[6],
+            self.0[7],
+            self.0[8],
+            self.0[9],
+            self.0[10],
+            self.0[11],
+            self.0[12],
+            self.0[13],
+            self.0[14],
+            self.0[15],
+        )
+    }
+}
+
+/// Used to avoid duplicates that could arise when the clock is set backwards in time.
 pub struct ClockSeq(u16);
 
 impl ClockSeq {
-    /// Generate new atomic random value.
+    /// New atomic random value.
     pub fn new(r: u16) -> u16 {
-        atomic::AtomicU16::new(r).fetch_add(1, atomic::Ordering::AcqRel)
+        atomic::AtomicU16::new(r).fetch_add(1, atomic::Ordering::SeqCst)
     }
 }
 
 /// The clock sequence is used to help avoid duplicates that could arise
 /// when the clock is set backwards in time or if the node ID changes.
+#[derive(Debug, PartialEq, Default, Copy, Clone)]
 pub struct Node([u8; 6]);
-
-impl fmt::Display for Node {
-    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            fmt,
-            "{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}",
-            self.0[0], self.0[1], self.0[2], self.0[3], self.0[4], self.0[5],
-        )
-    }
-}
 
 impl fmt::LowerHex for Node {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -337,5 +305,51 @@ impl fmt::UpperHex for Node {
             "{:02X}-{:02X}-{:02X}-{:02X}-{:02X}-{:02X}",
             self.0[0], self.0[1], self.0[2], self.0[3], self.0[4], self.0[5],
         )
+    }
+}
+
+impl Into<u64> for Node {
+    fn into(self) -> u64 {
+        (self.0[0] as u64) << 40
+            | (self.0[1] as u64) << 32
+            | (self.0[2] as u64) << 24
+            | (self.0[3] as u64) << 16
+            | (self.0[4] as u64) << 8
+            | self.0[5] as u64
+    }
+}
+
+impl ToString for Node {
+    fn to_string(&self) -> String {
+        format!(
+            "{:02}-{:02}-{:02}-{:02}-{:02}-{:02}",
+            self.0[0], self.0[1], self.0[2], self.0[3], self.0[4], self.0[5],
+        )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn default_value() {
+        let node = Node::default();
+        assert_eq!(node, Node([0; 6]));
+
+        let uuid = UUID::default();
+        assert_eq!(uuid, UUID([0; 16]));
+
+        let time: Timestamp = Timestamp::default();
+        assert_eq!(time.0.leading_zeros(), 64)
+    }
+
+    #[test]
+    fn to_string() {
+        let node = Node::default();
+        assert_eq!(node.to_string(), "00-00-00-00-00-00");
+
+        let uuid = UUID::default();
+        assert_eq!(uuid.to_string(), "00000000-0000-0000-0000-000000000000");
     }
 }

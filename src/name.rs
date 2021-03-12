@@ -3,7 +3,8 @@
 use md5;
 use sha1::Sha1;
 
-use crate::{Layout, Variant, Version, UUID};
+use crate::{Layout, Node, Variant, Version, UUID};
+// use crate::{UUID::NAMESPACE_DNS, UUID::NAMESPACE_OID, UUID::NAMESPACE_URL, UUID::NAMESPACE_X500};
 
 impl UUID {
     /// Generate a UUID by hashing a namespace identifier and name uses MD5.
@@ -19,7 +20,7 @@ impl UUID {
                 | (Version::MD5 as u16) << 12,
             clock_seq_high_and_reserved: (hash[8] & 0xf) | (Variant::RFC as u8) << 4,
             clock_seq_low: hash[9] as u8,
-            node: [hash[10], hash[11], hash[12], hash[13], hash[14], hash[15]],
+            node: Node([hash[10], hash[11], hash[12], hash[13], hash[14], hash[15]]),
         }
     }
 
@@ -36,7 +37,7 @@ impl UUID {
                 | (Version::SHA1 as u16) << 12,
             clock_seq_high_and_reserved: (hash[8] & 0xf) | (Variant::RFC as u8) << 4,
             clock_seq_low: hash[9] as u8,
-            node: [hash[10], hash[11], hash[12], hash[13], hash[14], hash[15]],
+            node: Node([hash[10], hash[11], hash[12], hash[13], hash[14], hash[15]]),
         }
     }
 
@@ -66,7 +67,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_new_v3() {
+    fn new_v3() {
         let namespace = [
             UUID::NAMESPACE_DNS,
             UUID::NAMESPACE_OID,
@@ -80,7 +81,7 @@ mod tests {
     }
 
     #[test]
-    fn test_new_v5() {
+    fn new_v5() {
         let namespace = [
             UUID::NAMESPACE_DNS,
             UUID::NAMESPACE_OID,

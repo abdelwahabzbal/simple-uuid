@@ -3,7 +3,7 @@
 use mac_address as MAC;
 use rand;
 
-use crate::{ClockSeq, Domain, Layout, Timestamp, Variant, Version, UUID};
+use crate::{ClockSeq, Domain, Layout, Node, Timestamp, Variant, Version, UUID};
 
 impl UUID {
     /// Generate a time-based and MAC-address UUID.
@@ -38,7 +38,7 @@ impl UUID {
     }
 
     /// Generate a time-based UUID with a user defined MAC-address.
-    pub fn from_mac(ver: Version, mac: [u8; 6]) -> Layout {
+    pub fn from_mac(ver: Version, mac: Node) -> Layout {
         let utc = Timestamp::new();
         let clock_seq = Self::clock_seq_high_and_reserved(Variant::RFC as u8);
         Layout {
@@ -59,8 +59,8 @@ impl UUID {
         )
     }
 
-    fn mac() -> [u8; 6] {
-        MAC::get_mac_address().unwrap().unwrap().bytes()
+    fn mac() -> Node {
+        Node(MAC::get_mac_address().unwrap().unwrap().bytes())
     }
 }
 
@@ -85,25 +85,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_new_v1() {
+    fn new_v1() {
         let uuid = UUID::new_v1();
         assert_eq!(uuid.get_version(), Some(Version::TIME));
         assert_eq!(uuid.get_variant(), Some(Variant::RFC));
-
-        let mac = MAC::get_mac_address().unwrap().unwrap().bytes();
-        assert_eq!(
-            uuid.as_fields().4,
-            (mac[0] as u64) << 40
-                | (mac[1] as u64) << 32
-                | (mac[2] as u64) << 24
-                | (mac[3] as u64) << 16
-                | (mac[4] as u64) << 8
-                | (mac[5] as u64),
-        );
     }
 
     #[test]
-    fn test_new_v2() {
+    fn new_v2() {
         let domains = [Domain::PERSON, Domain::GROUP, Domain::ORG];
         for d in domains.iter() {
             assert_eq!(UUID::new_v2(*d).get_version(), Some(Version::DCE));
@@ -112,16 +101,16 @@ mod tests {
     }
 
     #[test]
-    fn test_from_mac() {
-        let uuid = UUID::from_mac(Version::TIME, [0x03, 0x2a, 0x35, 0x0d, 0x13, 0x80]);
+    fn from_mac() {
+        let uuid = UUID::from_mac(Version::TIME, Node([0x03, 0x2a, 0x35, 0x0d, 0x13, 0x80]));
         assert_eq!(uuid.get_version(), Some(Version::TIME));
         assert_eq!(uuid.get_mac().0, [0x03, 0x2a, 0x35, 0x0d, 0x13, 0x80]);
     }
 
     #[test]
-    fn test_from_utc() {
-        let uuid = UUID::from_utc(Version::TIME, 1_234_567_u64);
+    fn from_utc() {
+        let uuid = UUID::from_utc(Version::TIME, 0x1234_u64);
         assert_eq!(uuid.get_version(), Some(Version::TIME));
-        assert_eq!(uuid.get_time(), 1_234_567_u64);
+        assert_eq!(uuid.get_time(), 0x1234_u64);
     }
 }

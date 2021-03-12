@@ -1,6 +1,6 @@
 #![cfg(feature = "random")]
 
-use crate::{Layout, Variant, Version, UUID};
+use crate::{Layout, Node, Variant, Version, UUID};
 use rand;
 
 impl UUID {
@@ -18,7 +18,7 @@ impl UUID {
                 | (Version::RAND as u16) << 12,
             clock_seq_high_and_reserved: (rand[8] & 0xf) | (Variant::RFC as u8) << 4,
             clock_seq_low: rand[9] as u8,
-            node: [rand[10], rand[11], rand[12], rand[13], rand[14], rand[15]],
+            node: Node([rand[10], rand[11], rand[12], rand[13], rand[14], rand[15]]),
         }
     }
 }
@@ -36,7 +36,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_v4() {
+    fn new_v4() {
         let uuid = UUID::new_v4();
         assert_eq!(uuid.get_version(), Some(Version::RAND));
         assert_eq!(uuid.get_variant(), Some(Variant::RFC));

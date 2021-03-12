@@ -1,8 +1,8 @@
 [package]
-name = "simid"
+name = "simple-uuid"
 description = "A Simple Universally Unique IDentifier (UUID)"
-authors = ["Wohabz <awh6al@yandex.com>"]
-documentation = "https://docs.rs/uuid-rs"
+authors = ["Wahabz <awh6al@yandex.com>"]
+documentation = "https://docs.rs/simple-uuid"
 version = "0.1.0"
 license = "MIT"
 edition = "2018"
@@ -18,7 +18,7 @@ keywords = [
     "global",
     "rand",
 ]
-repository = "https://github.com/wohabz/simid"
+repository = "https://github.com/awh6al/simple-uuid"
 
 [dependencies]
 mac_address = { version = "1.0.3", optional = true }
