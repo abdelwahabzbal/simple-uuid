@@ -1,15 +1,15 @@
 #![feature(test)]
 #![cfg(any(
+    feature = "mac",
+    feature = "random",
     feature = "hash_md5",
-    feauture = "hash_sha1",
-    feauture = "random",
-    feauture = "mac"
+    feature = "hash_sha1",
 ))]
 
 extern crate test;
 use test::Bencher;
 
-use uuid_rs::{Domain, Version, UUID};
+use simple_uuid::{Domain, Node, Version, UUID};
 
 #[bench]
 fn bench_new_v1(b: &mut Bencher) {
@@ -38,10 +38,10 @@ fn bench_new_v5(b: &mut Bencher) {
 
 #[bench]
 fn bench_from_mac(b: &mut Bencher) {
-    b.iter(|| UUID::from_mac(Version::TIME, [0x03, 0x2a, 0x35, 0x0d, 0x13, 0x80]));
+    b.iter(|| UUID::from_mac(Version::TIME, Node([0x03, 0x2a, 0x35, 0x0d, 0x13, 0x80])));
 }
 
 #[bench]
 fn bench_from_utc(b: &mut Bencher) {
-    b.iter(|| UUID::from_utc(Version::TIME, 1234));
+    b.iter(|| UUID::from_utc(Version::TIME, 0x1234));
 }

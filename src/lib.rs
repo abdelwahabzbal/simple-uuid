@@ -9,25 +9,24 @@
 //! ```
 //!
 //! ```rust
-//! //use simple_uuid::v4;
+//! use simple_uuid::v4;
 //!
-//! //fn main() {
-//! //    println!("{}", v4!());
-//! //}
+//! fn main() {
+//!     println!("{}", v4!());
+//! }
 //! ```
-
 #![doc(html_root_url = "https://docs.rs/simple-uuid")]
 
-mod name;
-mod rand;
-mod time;
+pub mod name;
+pub mod rand;
+pub mod time;
 
 use core::fmt;
 use core::sync::atomic;
 use std::time::SystemTime;
 
 /// Is 100-ns ticks between UNIX and UTC epochs.
-pub const UTC_EPOCH: u64 = 0x1B21_DD21_3814_000;
+pub const UTC_EPOCH: u64 = 0x1b21_dd21_3814_000;
 
 /// The UUID format is 16 octets.
 #[derive(Debug, Default)]
@@ -274,7 +273,7 @@ impl ToString for UUID {
 }
 
 /// Used to avoid duplicates that could arise when the clock is set backwards in time.
-pub struct ClockSeq(u16);
+pub struct ClockSeq(pub u16);
 
 impl ClockSeq {
     /// New atomic random value.
@@ -286,7 +285,7 @@ impl ClockSeq {
 /// The clock sequence is used to help avoid duplicates that could arise
 /// when the clock is set backwards in time or if the node ID changes.
 #[derive(Debug, PartialEq, Default, Copy, Clone)]
-pub struct Node([u8; 6]);
+pub struct Node(pub [u8; 6]);
 
 impl fmt::LowerHex for Node {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
