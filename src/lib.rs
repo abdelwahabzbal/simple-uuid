@@ -57,27 +57,27 @@ impl Layout {
         )
     }
 
-    // /// Returns a byte slice of this UUID content.
-    // pub fn as_bytes(&self) -> UUID<T> {
-    //     UUID([
-    //         self.field_low.into().to_be_bytes()[0],
-    //         self.field_low.into().to_be_bytes()[1],
-    //         self.field_low.into().to_be_bytes()[2],
-    //         self.field_low.into().to_be_bytes()[3],
-    //         self.field_mid.into().to_be_bytes()[0],
-    //         self.field_mid.into().to_be_bytes()[1],
-    //         self.field_high_and_version.into().to_be_bytes()[0],
-    //         self.field_high_and_version.into().to_be_bytes()[1],
-    //         self.clock_seq_high_and_reserved.into(),
-    //         self.clock_seq_low.into(),
-    //         self.node[0].into(),
-    //         self.node[1].into(),
-    //         self.node[2].into(),
-    //         self.node[3].into(),
-    //         self.node[4].into(),
-    //         self.node[5].into(),
-    //     ])
-    // }
+    /// Returns a byte slice of this UUID content.
+    pub fn as_bytes(&self) -> UUID {
+        UUID([
+            self.field_low.to_be_bytes()[0],
+            self.field_low.to_be_bytes()[1],
+            self.field_low.to_be_bytes()[2],
+            self.field_low.to_be_bytes()[3],
+            self.field_mid.to_be_bytes()[0],
+            self.field_mid.to_be_bytes()[1],
+            self.field_high_and_version.to_be_bytes()[0],
+            self.field_high_and_version.to_be_bytes()[1],
+            self.clock_seq_high_and_reserved,
+            self.clock_seq_low,
+            self.node.0[0],
+            self.node.0[1],
+            self.node.0[2],
+            self.node.0[3],
+            self.node.0[4],
+            self.node.0[5],
+        ])
+    }
 
     /// Version of the current generated UUID.
     pub fn get_version(&self) -> Option<Version> {
