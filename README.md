@@ -1,4 +1,4 @@
-## UUID ![](https://github.com/wohabz/simple-uuid/workflows/simple-uui/badge.svg)
+## UUID ![](https://github.com/awh6al/simple-uuid/workflows/simple-uui/badge.svg)
 A universally unique identifier (UUID) is a 128-bit number used to identify
 information in computer systems. The term globally unique identifier (GUID)
 is also used.
@@ -10,7 +10,7 @@ This crate generates and inspects UUIDs based on
 ## Install
 ```TOML
 [dependencies]
-simple-uuid = { version = "0.1.0", features = ["random"] }
+simple-uuid = { version = "0.1.", features = ["random"] }
 ```
 
 ## Usage
