@@ -4,7 +4,7 @@ use crate::{Layout, Node, Variant, Version, UUID};
 use rand;
 
 impl UUID {
-    /// Generate a UUID from truly random numbers.
+    /// New UUID from truly random numbers.
     pub fn new_v4() -> Layout {
         let rng = rand::random::<u128>();
         let rand = rng.to_be_bytes();
@@ -23,7 +23,6 @@ impl UUID {
     }
 }
 
-/// Quick UUID version-4.
 #[macro_export]
 macro_rules! v4 {
     () => {

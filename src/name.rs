@@ -4,10 +4,9 @@ use md5;
 use sha1::Sha1;
 
 use crate::{Layout, Node, Variant, Version, UUID};
-// use crate::{UUID::NAMESPACE_DNS, UUID::NAMESPACE_OID, UUID::NAMESPACE_URL, UUID::NAMESPACE_X500};
 
 impl UUID {
-    /// Generate a UUID by hashing a namespace identifier and name uses MD5.
+    /// Generate new UUID by hashing using MD5 algorithm.
     pub fn new_v3(any: &str, namespace: UUID) -> Layout {
         let hash = md5::compute(Self::data(any, namespace)).0;
         Layout {
@@ -24,7 +23,7 @@ impl UUID {
         }
     }
 
-    /// Generate a UUID by hashing a namespace identifier and name uses SHA1.
+    /// Generate a UUID by hashing using SHA1 algorithm.
     pub fn new_v5(any: &str, namespace: UUID) -> Layout {
         let hash = Sha1::from(Self::data(any, namespace)).digest().bytes();
         Layout {
@@ -46,7 +45,6 @@ impl UUID {
     }
 }
 
-/// Quick UUID version-3.
 #[macro_export]
 macro_rules! v3 {
     ($any:expr, $namespace:expr) => {
@@ -54,7 +52,6 @@ macro_rules! v3 {
     };
 }
 
-/// Quick UUID version-5.
 #[macro_export]
 macro_rules! v5 {
     ($any:expr, $namespace:expr) => {
@@ -74,6 +71,7 @@ mod tests {
             UUID::NAMESPACE_URL,
             UUID::NAMESPACE_X500,
         ];
+
         for s in namespace.iter() {
             assert_eq!(UUID::new_v3("any", *s).get_version(), Some(Version::MD5));
             assert_eq!(UUID::new_v3("any", *s).get_variant(), Some(Variant::RFC));
@@ -88,6 +86,7 @@ mod tests {
             UUID::NAMESPACE_URL,
             UUID::NAMESPACE_X500,
         ];
+
         for s in namespace.iter() {
             assert_eq!(UUID::new_v5("any", *s).get_version(), Some(Version::SHA1));
             assert_eq!(UUID::new_v5("any", *s).get_variant(), Some(Variant::RFC));

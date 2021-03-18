@@ -11,9 +11,7 @@
 //! ```rust
 //! use simple_uuid::v4;
 //!
-//! fn main() {
-//!     println!("{}", v4!());
-//! }
+//! println!("{}", v4!());
 //! ```
 #![doc(html_root_url = "https://docs.rs/simple-uuid")]
 
@@ -49,15 +47,26 @@ impl Layout {
     /// Returns the five field values of the UUID in big-endian order.
     pub fn be_fields(&self) -> (u32, u16, u16, u16, Node) {
         (
-            self.field_low,
-            self.field_mid,
-            self.field_high_and_version,
-            (self.clock_seq_high_and_reserved as u16) << 8 | self.clock_seq_low as u16,
+            self.field_low.to_be(),
+            self.field_mid.to_be(),
+            self.field_high_and_version.to_be(),
+            ((self.clock_seq_high_and_reserved as u16) << 8 | self.clock_seq_low as u16).to_be(),
             self.node,
         )
     }
 
-    /// Returns a byte slice of this UUID content.
+    /// Returns the five field values of the UUID in little-endian order.
+    pub fn le_fields(&self) -> (u32, u16, u16, u16, Node) {
+        (
+            self.field_low.to_le(),
+            self.field_mid.to_le(),
+            self.field_high_and_version.to_le(),
+            ((self.clock_seq_high_and_reserved as u16) << 8 | self.clock_seq_low as u16).to_le(),
+            self.node,
+        )
+    }
+
+    /// Returns a byte slice of UUID content.
     pub fn as_bytes(&self) -> UUID {
         UUID([
             self.field_low.to_be_bytes()[0],
