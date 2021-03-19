@@ -13,8 +13,8 @@ impl UUID {
 
     /// New DCE-security UUID.
     ///
-    /// On a POSIX system the id should be the users UID for the Person domain
-    /// and the users GID for the Group.
+    /// On a POSIX system the id should be the users UID for
+    /// the Person domain and the users GID for the Group.
     pub fn new_v2(d: Domain) -> Layout {
         let utc = Timestamp::new();
         Layout {
@@ -77,6 +77,7 @@ impl UUID {
     }
 }
 
+/// Quick `UUID` version-1
 #[macro_export]
 macro_rules! v1 {
     () => {
@@ -84,6 +85,7 @@ macro_rules! v1 {
     };
 }
 
+/// Quick `UUID` version-2
 #[macro_export]
 macro_rules! v2 {
     ($domain:expr) => {

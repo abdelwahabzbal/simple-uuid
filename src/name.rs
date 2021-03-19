@@ -6,7 +6,7 @@ use sha1::Sha1;
 use crate::{Layout, Node, Variant, Version, UUID};
 
 impl UUID {
-    /// Generate new UUID by hashing using MD5 algorithm.
+    /// Generate new UUID by hashing, using MD5 algorithm.
     pub fn new_v3(any: &str, namespace: UUID) -> Layout {
         let hash = md5::compute(Self::data(any, namespace)).0;
         Layout {
@@ -23,7 +23,7 @@ impl UUID {
         }
     }
 
-    /// Generate a UUID by hashing using SHA1 algorithm.
+    /// Generate a UUID by hashing, using SHA1 algorithm.
     pub fn new_v5(any: &str, namespace: UUID) -> Layout {
         let hash = Sha1::from(Self::data(any, namespace)).digest().bytes();
         Layout {
@@ -45,6 +45,7 @@ impl UUID {
     }
 }
 
+/// Quick `UUID` version-3
 #[macro_export]
 macro_rules! v3 {
     ($any:expr, $namespace:expr) => {
@@ -52,6 +53,7 @@ macro_rules! v3 {
     };
 }
 
+/// Quick `UUID` version-5
 #[macro_export]
 macro_rules! v5 {
     ($any:expr, $namespace:expr) => {

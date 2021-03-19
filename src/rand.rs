@@ -23,6 +23,7 @@ impl UUID {
     }
 }
 
+/// Quick `UUID` version-4
 #[macro_export]
 macro_rules! v4 {
     () => {
