@@ -6,9 +6,9 @@ use sha1::Sha1;
 use crate::{Layout, Node, Variant, Version, UUID};
 
 impl UUID {
-    /// Generate new UUID by hashing, using MD5 algorithm.
-    pub fn new_v3(any: &str, namespace: UUID) -> Layout {
-        let hash = md5::compute(Self::data(any, namespace)).0;
+    /// Generate new UUID using MD5 algorithm.
+    pub fn new_v3(any: &str, ns: UUID) -> Layout {
+        let hash = md5::compute(Self::data(any, ns)).0;
         Layout {
             field_low: ((hash[0] as u32) << 24)
                 | (hash[1] as u32) << 16
@@ -23,9 +23,9 @@ impl UUID {
         }
     }
 
-    /// Generate a UUID by hashing, using SHA1 algorithm.
-    pub fn new_v5(any: &str, namespace: UUID) -> Layout {
-        let hash = Sha1::from(Self::data(any, namespace)).digest().bytes();
+    /// Generate new UUID using SHA1 algorithm.
+    pub fn new_v5(any: &str, ns: UUID) -> Layout {
+        let hash = Sha1::from(Self::data(any, ns)).digest().bytes();
         Layout {
             field_low: ((hash[0] as u32) << 24)
                 | (hash[1] as u32) << 16
@@ -40,24 +40,24 @@ impl UUID {
         }
     }
 
-    fn data(any: &str, namespace: UUID) -> String {
-        format!("{:x}", namespace) + any
+    fn data(any: &str, ns: UUID) -> String {
+        format!("{:x}", ns) + any
     }
 }
 
 /// Quick `UUID` version-3
 #[macro_export]
 macro_rules! v3 {
-    ($any:expr, $namespace:expr) => {
-        format!("{:x}", $crate::UUID::new_v3($any, $namespace).as_bytes())
+    ($any:expr, $ns:expr) => {
+        format!("{:x}", $crate::UUID::new_v3($any, $ns).le_bytes())
     };
 }
 
 /// Quick `UUID` version-5
 #[macro_export]
 macro_rules! v5 {
-    ($any:expr, $namespace:expr) => {
-        format!("{:x}", $crate::UUID::new_v5($any, $namespace).as_bytes())
+    ($any:expr, $ns:expr) => {
+        format!("{:x}", $crate::UUID::new_v5($any, $ns).le_bytes())
     };
 }
 
@@ -67,14 +67,14 @@ mod tests {
 
     #[test]
     fn new_v3() {
-        let namespace = [
+        let ns = [
             UUID::NAMESPACE_DNS,
             UUID::NAMESPACE_OID,
             UUID::NAMESPACE_URL,
             UUID::NAMESPACE_X500,
         ];
 
-        for s in namespace.iter() {
+        for s in ns.iter() {
             assert_eq!(UUID::new_v3("any", *s).get_version(), Some(Version::MD5));
             assert_eq!(UUID::new_v3("any", *s).get_variant(), Some(Variant::RFC));
         }
@@ -82,14 +82,14 @@ mod tests {
 
     #[test]
     fn new_v5() {
-        let namespace = [
+        let ns = [
             UUID::NAMESPACE_DNS,
             UUID::NAMESPACE_OID,
             UUID::NAMESPACE_URL,
             UUID::NAMESPACE_X500,
         ];
 
-        for s in namespace.iter() {
+        for s in ns.iter() {
             assert_eq!(UUID::new_v5("any", *s).get_version(), Some(Version::SHA1));
             assert_eq!(UUID::new_v5("any", *s).get_variant(), Some(Variant::RFC));
         }

@@ -38,10 +38,10 @@ fn bench_new_v5(b: &mut Bencher) {
 
 #[bench]
 fn bench_from_mac(b: &mut Bencher) {
-    b.iter(|| UUID::from_mac(Version::TIME, Node([0x03, 0x2a, 0x35, 0x0d, 0x13, 0x80])));
+    b.iter(|| UUID::from_mac(Node([0x03, 0x2a, 0x35, 0x0d, 0x13, 0x80]), Version::TIME));
 }
 
 #[bench]
 fn bench_from_utc(b: &mut Bencher) {
-    b.iter(|| UUID::from_utc(Version::TIME, 0x1234));
+    b.iter(|| UUID::from_utc(0x1234, Version::TIME));
 }

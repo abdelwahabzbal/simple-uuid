@@ -10,7 +10,6 @@
 //!
 //! ```rust
 //! use simple_uuid::v4;
-//!
 //! println!("{}", v4!());
 //! ```
 #![doc(html_root_url = "https://docs.rs/simple-uuid")]
@@ -66,8 +65,8 @@ impl Layout {
         )
     }
 
-    /// Returns a byte slice of UUID content.
-    pub fn as_bytes(&self) -> UUID {
+    /// Return the memory representation of the UUID in big-endian order .
+    pub fn be_bytes(&self) -> UUID {
         UUID([
             self.field_low.to_be_bytes()[0],
             self.field_low.to_be_bytes()[1],
@@ -85,6 +84,28 @@ impl Layout {
             self.node.0[3],
             self.node.0[4],
             self.node.0[5],
+        ])
+    }
+
+    /// Return the memory representation of the UUID in little-endian order .
+    pub fn le_bytes(&self) -> UUID {
+        UUID([
+            self.field_low.to_be_bytes()[3],
+            self.field_low.to_be_bytes()[2],
+            self.field_low.to_be_bytes()[1],
+            self.field_low.to_be_bytes()[0],
+            self.field_mid.to_be_bytes()[1],
+            self.field_mid.to_be_bytes()[0],
+            self.field_high_and_version.to_be_bytes()[1],
+            self.field_high_and_version.to_be_bytes()[0],
+            self.clock_seq_high_and_reserved,
+            self.clock_seq_low,
+            self.node.0[5],
+            self.node.0[4],
+            self.node.0[3],
+            self.node.0[2],
+            self.node.0[1],
+            self.node.0[0],
         ])
     }
 
