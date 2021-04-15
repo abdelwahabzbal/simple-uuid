@@ -36,11 +36,13 @@ impl Domain {
         let utc = TimeStamp::now();
         let clock_seq = crate::clock_seq_high_and_reserved(Variant::RFC as u8);
         let domain: u8;
+
         match d {
             Domain::PRN => domain = Domain::get_uid(),
             Domain::GRP => domain = Domain::get_gid(),
-            Domain::ORG => domain = 0,
+            Domain::ORG => domain = 0, // FIXE: set the correct value
         }
+
         Layout {
             field_low: ((utc & 0xffff_ffff) as u32),
             field_mid: ((utc >> 32 & 0xffff) as u16),
@@ -50,10 +52,23 @@ impl Domain {
             node: Node(mac_address::get_mac_address().unwrap().unwrap().bytes()),
         }
     }
+
+    pub fn from(node: Node) -> Layout {
+        let utc = TimeStamp::now();
+        let clock_seq = crate::clock_seq_high_and_reserved(Variant::RFC as u8);
+        Layout {
+            field_low: ((utc & 0xffff_ffff) as u32),
+            field_mid: ((utc >> 32 & 0xffff) as u16),
+            field_high_and_version: (utc >> 48 & 0xfff) as u16 | (Version::DCE as u16) << 12,
+            clock_seq_high_and_reserved: clock_seq.0,
+            clock_seq_low: clock_seq.1,
+            node: node,
+        }
+    }
 }
 
 impl Node {
-    pub fn from(n: Node) -> Layout {
+    pub fn from(node: Node) -> Layout {
         let utc = TimeStamp::now();
         let clock_seq = crate::clock_seq_high_and_reserved(Variant::RFC as u8);
         Layout {
@@ -62,7 +77,7 @@ impl Node {
             field_high_and_version: (utc >> 48 & 0xfff) as u16 | (Version::TIME as u16) << 12,
             clock_seq_high_and_reserved: clock_seq.0,
             clock_seq_low: clock_seq.1,
-            node: n,
+            node: node,
         }
     }
 }
@@ -102,17 +117,17 @@ mod tests {
         }
     }
 
-    // #[test]
-    // fn from_mac() {
-    //     let uuid = UUID::from_mac(Node([0x03, 0x2a, 0x35, 0x0d, 0x13, 0x80]), Version::TIME);
-    //     assert_eq!(uuid.unwrap().get_version(), Some(Version::TIME));
+    #[test]
+    fn new_uuid_from_user_defined_mac_address() {
+        let uuid = Node::from(Node([0x03, 0x2a, 0x35, 0x0d, 0x13, 0x80]));
+        assert_eq!(uuid.get_version(), Some(Version::TIME));
 
-    //     let uuid = UUID::from_mac(Node([0x03, 0x2a, 0x35, 0x0d, 0x13, 0x80]), Version::TIME);
-    //     assert_eq!(
-    //         uuid.unwrap().get_mac().0,
-    //         [0x03, 0x2a, 0x35, 0x0d, 0x13, 0x80]
-    //     );
-    // }
+        let uuid = Domain::from(Node([0x03, 0x2a, 0x35, 0x0d, 0x13, 0x80]));
+        assert_eq!(uuid.get_version(), Some(Version::DCE));
+
+        let uuid = Node::from(Node([0x03, 0x2a, 0x35, 0x0d, 0x13, 0x80]));
+        assert_eq!(uuid.get_mac().0, [0x03, 0x2a, 0x35, 0x0d, 0x13, 0x80]);
+    }
 
     // #[test]
     // fn from_utc() {
