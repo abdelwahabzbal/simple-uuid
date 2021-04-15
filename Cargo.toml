@@ -23,12 +23,13 @@ repository = "https://github.com/awh6al/simple-uuid"
 [dependencies]
 mac_address = { version = "1.0.3", optional = true }
 rand = { version = "0.7.3", optional = true }
+users = { version = "0.11.0", optional = true }
 md5 = { version = "0.7.0", optional = true }
 sha1 = { version = "0.6.0", optional = true }
 
 [features]
 default = ["mac", "random", "hash_md5", "hash_sha1"]
-mac = ["mac_address", "rand"]
+mac = ["mac_address", "rand", "users"]
 random = ["rand"]
 hash_sha1 = ["sha1"]
 hash_md5 = ["md5"]

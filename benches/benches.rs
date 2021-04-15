@@ -18,7 +18,7 @@ fn bench_new_v1(b: &mut Bencher) {
 
 #[bench]
 fn bench_new_v2(b: &mut Bencher) {
-    b.iter(|| UUID::new_v2(Domain::PERSON));
+    b.iter(|| UUID::new_v2(Domain::PRN));
 }
 
 #[bench]

@@ -9,13 +9,13 @@
 //! ```
 //!
 //! ```rust
-//! use simple_uuid::v4;
-//! println!("{}", v4!());
+//! //use simple_uuid::v4;
+//! //println!("{}", v4!());
 //! ```
 #![doc(html_root_url = "https://docs.rs/simple-uuid")]
 
 mod name;
-mod rand;
+mod randy;
 mod time;
 
 use core::fmt;
@@ -55,7 +55,7 @@ impl Layout {
     }
 
     /// Returns the five field values of the UUID in little-endian order.
-    pub fn le_fields(&self) -> (u32, u16, u16, u16, Node) {
+    pub fn as_fields(&self) -> (u32, u16, u16, u16, Node) {
         (
             self.field_low.to_le(),
             self.field_mid.to_le(),
@@ -88,7 +88,7 @@ impl Layout {
     }
 
     /// Return the memory representation of the UUID in little-endian order .
-    pub fn le_bytes(&self) -> UUID {
+    pub fn as_bytes(&self) -> UUID {
         UUID([
             self.field_low.to_be_bytes()[3],
             self.field_low.to_be_bytes()[2],
@@ -141,14 +141,27 @@ impl Layout {
     pub fn get_mac(&self) -> Node {
         self.node
     }
+
+    // #[cfg(feature = "mac")]
 }
 
 /// Domain is security-domain-relative name.
 #[derive(Debug, Copy, Clone)]
 pub enum Domain {
-    PERSON = 0,
-    GROUP,
+    PRN,
+    GRP,
     ORG,
+}
+
+#[cfg(feature = "mac")]
+impl Domain {
+    pub fn get_uid() -> u8 {
+        users::get_current_uid() as u8
+    }
+
+    pub fn get_gid() -> u8 {
+        users::get_current_gid() as u8
+    }
 }
 
 /// Variant is a type field determines the layout of the UUID.
@@ -181,19 +194,18 @@ pub enum Version {
 
 /// Represented by Coordinated Universal Time (UTC)
 /// as a count of 100-ns intervals from the system-time.
-#[derive(Debug, Eq, PartialEq, Default)]
-pub struct Timestamp(u64);
+#[derive(Debug, Eq, PartialEq, Clone, Copy, Default)]
+pub struct TimeStamp(u64);
 
-impl Timestamp {
-    /// Generate new UTC timestamp.
-    pub fn new() -> u64 {
+impl TimeStamp {
+    /// Generate new UTC timeStamp.
+    pub fn now() -> u64 {
         let utc = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
             .checked_add(std::time::Duration::from_nanos(UTC_EPOCH))
             .unwrap()
             .as_nanos();
-
         (utc & 0xffff_ffff_ffff_fff) as u64
     }
 }
@@ -312,6 +324,13 @@ impl ClockSeq {
     }
 }
 
+fn clock_seq_high_and_reserved(s: u8) -> (u8, u8) {
+    let clock_seq = ClockSeq::new(rand::random::<u16>());
+    (
+        ((clock_seq >> 8) & 0xf) as u8 | s << 4,
+        (clock_seq & 0xff) as u8,
+    )
+}
 /// The clock sequence is used to help avoid duplicates that could arise
 /// when the clock is set backwards in time or if the node ID changes.
 #[derive(Debug, PartialEq, Default, Copy, Clone)]
@@ -358,7 +377,7 @@ mod tests {
         let uuid = UUID::default();
         assert_eq!(uuid, UUID([0; 16]));
 
-        let time: Timestamp = Timestamp::default();
+        let time: TimeStamp = TimeStamp::default();
         assert_eq!(time.0.leading_zeros(), 64)
     }
 
