@@ -153,17 +153,6 @@ pub enum Domain {
     ORG,
 }
 
-#[cfg(feature = "mac")]
-impl Domain {
-    pub fn get_uid() -> u8 {
-        users::get_current_uid() as u8
-    }
-
-    pub fn get_gid() -> u8 {
-        users::get_current_gid() as u8
-    }
-}
-
 /// Variant is a type field determines the layout of the UUID.
 #[derive(Debug, Eq, PartialEq)]
 pub enum Variant {

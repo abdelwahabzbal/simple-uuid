@@ -1,4 +1,4 @@
-#![cfg(feature = "mac")]
+#![cfg(feature = "time")]
 
 use mac_address;
 
@@ -65,6 +65,14 @@ impl Domain {
             node: node,
         }
     }
+
+    pub fn get_uid() -> u8 {
+        users::get_current_uid() as u8
+    }
+
+    pub fn get_gid() -> u8 {
+        users::get_current_gid() as u8
+    }
 }
 
 impl Node {
@@ -86,7 +94,7 @@ impl Node {
 #[macro_export]
 macro_rules! v1 {
     () => {
-        format!("{:x}", $crate::UUID::new_v1().unwrap().as_bytes())
+        format!("{:x}", $crate::TimeStamp::new().as_bytes())
     };
 }
 
@@ -94,7 +102,7 @@ macro_rules! v1 {
 #[macro_export]
 macro_rules! v2 {
     ($domain:expr) => {
-        format!("{:x}", $crate::UUID::new_v2($domain).as_bytes())
+        format!("{:x}", $crate::Domain::new($domain).as_bytes())
     };
 }
 
@@ -127,19 +135,10 @@ mod tests {
         assert_eq!(uuid.get_version(), Some(Version::DCE));
     }
 
-    // #[test]
-    // fn from_utc() {
-    //     let uuid = UUID::from_utc(0x1234_u64, Version::TIME);
-    //     assert_eq!(uuid.unwrap().get_version(), Some(Version::TIME));
-
-    //     let uuid = UUID::from_utc(0x1234_u64, Version::TIME);
-    //     assert_eq!(uuid.unwrap().get_time(), 0x1234_u64);
-    // }
-
-    // #[should_panic]
-    // #[test]
-    // fn from_utc_panic() {
-    //     let uuid = UUID::from_utc(0x1234_u64, Version::TIME);
-    //     assert_eq!(uuid.unwrap().get_version(), Some(Version::RAND))
-    // }
+    #[test]
+    fn new_uuid_from_custom_time() {
+        let uuid = TimeStamp::from(0x1234_u64);
+        assert_eq!(uuid.get_version(), Some(Version::TIME));
+        assert_eq!(uuid.get_time(), 0x1234_u64);
+    }
 }
