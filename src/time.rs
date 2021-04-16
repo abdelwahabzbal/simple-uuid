@@ -121,12 +121,10 @@ mod tests {
     fn new_uuid_from_user_defined_mac_address() {
         let uuid = Node::from(Node([0x03, 0x2a, 0x35, 0x0d, 0x13, 0x80]));
         assert_eq!(uuid.get_version(), Some(Version::TIME));
+        assert_eq!(uuid.get_mac().0, [0x03, 0x2a, 0x35, 0x0d, 0x13, 0x80]);
 
         let uuid = Domain::from(Node([0x03, 0x2a, 0x35, 0x0d, 0x13, 0x80]));
         assert_eq!(uuid.get_version(), Some(Version::DCE));
-
-        let uuid = Node::from(Node([0x03, 0x2a, 0x35, 0x0d, 0x13, 0x80]));
-        assert_eq!(uuid.get_mac().0, [0x03, 0x2a, 0x35, 0x0d, 0x13, 0x80]);
     }
 
     // #[test]
