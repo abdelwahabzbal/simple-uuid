@@ -143,14 +143,6 @@ impl Layout {
     }
 }
 
-/// Domain is security-domain-relative name.
-#[derive(Debug, Copy, Clone)]
-pub enum Domain {
-    PRN,
-    GRP,
-    ORG,
-}
-
 /// Variant is a type field determines the layout of the UUID.
 #[derive(Debug, Eq, PartialEq)]
 pub enum Variant {

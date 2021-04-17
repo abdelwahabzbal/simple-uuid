@@ -9,16 +9,11 @@
 extern crate test;
 use test::Bencher;
 
-use simple_uuid::{Domain, Node, Random, TimeStamp, UUID};
+use simple_uuid::{Node, Random, TimeStamp, UUID};
 
 #[bench]
 fn bench_new_v1(b: &mut Bencher) {
     b.iter(|| TimeStamp::new());
-}
-
-#[bench]
-fn bench_new_v2(b: &mut Bencher) {
-    b.iter(|| Domain::new(Domain::PRN));
 }
 
 #[bench]
