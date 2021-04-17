@@ -141,8 +141,6 @@ impl Layout {
     pub fn get_mac(&self) -> Node {
         self.node
     }
-
-    // #[cfg(feature = "mac")]
 }
 
 /// Domain is security-domain-relative name.
@@ -187,8 +185,8 @@ pub enum Version {
 pub struct TimeStamp(u64);
 
 impl TimeStamp {
-    /// Generate new UTC timeStamp.
-    pub fn now() -> u64 {
+    /// Generate new UTC time stamp.
+    pub fn as_nano() -> u64 {
         let utc = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
@@ -353,6 +351,9 @@ impl ToString for Node {
         )
     }
 }
+
+/// Type hold random number.
+pub struct Random(pub u128);
 
 #[cfg(test)]
 mod tests {

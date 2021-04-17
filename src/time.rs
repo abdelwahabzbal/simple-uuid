@@ -1,4 +1,4 @@
-#![cfg(feature = "time")]
+#![cfg(feature = "mac")]
 
 use mac_address;
 
@@ -7,7 +7,7 @@ use crate::{Domain, Layout, Node, TimeStamp, Variant, Version};
 impl TimeStamp {
     pub fn new() -> Layout {
         let clock_seq: (u8, u8) = crate::clock_seq_high_and_reserved(Variant::RFC as u8);
-        let utc = TimeStamp::now();
+        let utc = TimeStamp::as_nano();
         Layout {
             field_low: (utc & 0xffff_ffff) as u32,
             field_mid: ((utc >> 32 & 0xffff) as u16),
@@ -33,7 +33,7 @@ impl TimeStamp {
 
 impl Domain {
     pub fn new(d: Domain) -> Layout {
-        let utc = TimeStamp::now();
+        let utc = TimeStamp::as_nano();
         let clock_seq = crate::clock_seq_high_and_reserved(Variant::RFC as u8);
         let domain: u8;
 
@@ -54,7 +54,7 @@ impl Domain {
     }
 
     pub fn from(node: Node) -> Layout {
-        let utc = TimeStamp::now();
+        let utc = TimeStamp::as_nano();
         let clock_seq = crate::clock_seq_high_and_reserved(Variant::RFC as u8);
         Layout {
             field_low: ((utc & 0xffff_ffff) as u32),
@@ -77,7 +77,7 @@ impl Domain {
 
 impl Node {
     pub fn from(node: Node) -> Layout {
-        let utc = TimeStamp::now();
+        let utc = TimeStamp::as_nano();
         let clock_seq = crate::clock_seq_high_and_reserved(Variant::RFC as u8);
         Layout {
             field_low: ((utc & 0xffff_ffff) as u32),

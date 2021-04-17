@@ -1,13 +1,12 @@
 #![cfg(feature = "random")]
 
-use crate::{Layout, Node, Variant, Version, UUID};
-use rand;
+use crate::{Layout, Node, Random, Variant, Version};
+use rand as random;
 
-impl UUID {
+impl Random {
     /// New UUID from truly-random numbers.
-    pub fn new_v4() -> Layout {
-        let rng = rand::random::<u128>();
-        let rand = rng.to_be_bytes();
+    pub fn new() -> Layout {
+        let rand = random::random::<u128>().to_le_bytes();
         Layout {
             field_low: ((rand[0] as u32) << 24)
                 | (rand[1] as u32) << 16
@@ -27,7 +26,7 @@ impl UUID {
 #[macro_export]
 macro_rules! v4 {
     () => {
-        format!("{:x}", $crate::UUID::new_v4().le_bytes())
+        format!("{:x}", $crate::Random::new().as_bytes())
     };
 }
 
@@ -37,7 +36,7 @@ mod tests {
 
     #[test]
     fn new_v4() {
-        let uuid = UUID::new_v4();
+        let uuid = Random::new();
         assert_eq!(uuid.get_version(), Some(Version::RAND));
         assert_eq!(uuid.get_variant(), Some(Variant::RFC));
     }
