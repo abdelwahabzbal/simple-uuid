@@ -67,11 +67,11 @@ impl Domain {
     }
 
     pub fn get_uid() -> u8 {
-        users::get_current_uid() as u8
+        unsafe { libc::getuid() as u8 }
     }
 
     pub fn get_gid() -> u8 {
-        users::get_current_gid() as u8
+        unsafe { libc::getgid() as u8 }
     }
 }
 
