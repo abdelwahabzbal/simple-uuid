@@ -3,6 +3,7 @@
 use mac_address;
 
 use crate::{Domain, Layout, Node, TimeStamp, Variant, Version};
+use libc;
 
 impl TimeStamp {
     pub fn new() -> Layout {
