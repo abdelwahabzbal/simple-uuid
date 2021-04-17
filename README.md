@@ -1,4 +1,4 @@
-## UUID ![](https://github.com/awh6al/simple-uuid/workflows/simple-uui/badge.svg)
+## UUID ![](https://github.com/awh6al/simple-uuid/workflows/simple-uuid/badge.svg)
 A universally unique identifier (UUID) is a 128-bit number used to identify
 information in computer systems. The term globally unique identifier (GUID)
 is also used.
