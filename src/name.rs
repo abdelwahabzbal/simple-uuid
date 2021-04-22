@@ -3,11 +3,11 @@
 use md5;
 use sha1::Sha1;
 
-use crate::{Layout, Node, Variant, Version, UUID};
+use crate::{Hash, Layout, Node, Variant, Version, UUID};
 
-impl UUID {
+impl Hash {
     /// Generate new UUID using MD5 algorithm.
-    pub fn new_v3(any: &str, ns: UUID) -> Layout {
+    pub fn from_md5(any: &str, ns: UUID) -> Layout {
         let hash = md5::compute(Self::data(any, ns)).0;
         Layout {
             field_low: ((hash[0] as u32) << 24)
@@ -24,7 +24,7 @@ impl UUID {
     }
 
     /// Generate new UUID using SHA1 algorithm.
-    pub fn new_v5(any: &str, ns: UUID) -> Layout {
+    pub fn from_sha1(any: &str, ns: UUID) -> Layout {
         let hash = Sha1::from(Self::data(any, ns)).digest().bytes();
         Layout {
             field_low: ((hash[0] as u32) << 24)
@@ -49,7 +49,7 @@ impl UUID {
 #[macro_export]
 macro_rules! v3 {
     ($any:expr, $ns:expr) => {
-        format!("{:x}", $crate::UUID::new_v3($any, $ns).le_bytes())
+        format!("{:x}", $crate::Hash::from_md5($any, $ns).le_bytes())
     };
 }
 
@@ -57,7 +57,7 @@ macro_rules! v3 {
 #[macro_export]
 macro_rules! v5 {
     ($any:expr, $ns:expr) => {
-        format!("{:x}", $crate::UUID::new_v5($any, $ns).le_bytes())
+        format!("{:x}", $crate::Hash::from_sha1($any, $ns).le_bytes())
     };
 }
 
@@ -75,8 +75,8 @@ mod tests {
         ];
 
         for s in ns.iter() {
-            assert_eq!(UUID::new_v3("any", *s).get_version(), Some(Version::MD5));
-            assert_eq!(UUID::new_v3("any", *s).get_variant(), Some(Variant::RFC));
+            assert_eq!(Hash::from_md5("any", *s).get_version(), Some(Version::MD5));
+            assert_eq!(Hash::from_md5("any", *s).get_variant(), Some(Variant::RFC));
         }
     }
 
@@ -90,8 +90,11 @@ mod tests {
         ];
 
         for s in ns.iter() {
-            assert_eq!(UUID::new_v5("any", *s).get_version(), Some(Version::SHA1));
-            assert_eq!(UUID::new_v5("any", *s).get_variant(), Some(Variant::RFC));
+            assert_eq!(
+                Hash::from_sha1("any", *s).get_version(),
+                Some(Version::SHA1)
+            );
+            assert_eq!(Hash::from_sha1("any", *s).get_variant(), Some(Variant::RFC));
         }
     }
 }

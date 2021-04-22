@@ -9,16 +9,16 @@
 extern crate test;
 use test::Bencher;
 
-use simple_uuid::{Node, Random, TimeStamp, UUID};
+use simple_uuid::{Hash, Node, Random, TimeStamp, UUID};
 
 #[bench]
 fn bench_new_v1(b: &mut Bencher) {
-    b.iter(|| TimeStamp::new());
+    b.iter(|| TimeStamp::v1());
 }
 
 #[bench]
 fn bench_new_v3(b: &mut Bencher) {
-    b.iter(|| UUID::new_v3("any", UUID::NAMESPACE_DNS));
+    b.iter(|| Hash::from_md5("any", UUID::NAMESPACE_DNS));
 }
 
 #[bench]
@@ -28,7 +28,7 @@ fn bench_new_v4(b: &mut Bencher) {
 
 #[bench]
 fn bench_new_v5(b: &mut Bencher) {
-    b.iter(|| UUID::new_v5("any", UUID::NAMESPACE_X500));
+    b.iter(|| Hash::from_sha1("any", UUID::NAMESPACE_X500));
 }
 
 #[bench]
@@ -38,5 +38,5 @@ fn bench_from_mac_address(b: &mut Bencher) {
 
 #[bench]
 fn bench_from_utc(b: &mut Bencher) {
-    b.iter(|| TimeStamp::from(0x1234));
+    b.iter(|| UUID::from_utc(0x1234));
 }
