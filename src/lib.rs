@@ -15,7 +15,7 @@
 #![doc(html_root_url = "https://docs.rs/simple-uuid")]
 
 mod name;
-mod randy;
+mod random;
 mod time;
 
 use core::fmt;
@@ -131,16 +131,6 @@ impl Layout {
             _ => None,
         }
     }
-
-    /// Get timestamp where the UUID generated in.
-    pub fn get_time(&self) -> u64 {
-        self.field_low as u64
-    }
-
-    /// Get the MAC-address where the UUID generated with.
-    pub fn get_mac(&self) -> Node {
-        self.node
-    }
 }
 
 /// Variant is a type field determines the layout of the UUID.
@@ -171,14 +161,14 @@ pub enum Version {
     SHA1,
 }
 
-/// Represented by Coordinated Universal Time (UTC)
-/// as a count of 100-ns intervals from the system-time.
+/// Represented by Coordinated Universal Time (UTC) as a count
+/// of 100-ns intervals from the system-time.
 #[derive(Debug, Eq, PartialEq, Clone, Copy, Default)]
 pub struct TimeStamp(u64);
 
 impl TimeStamp {
     /// Generate new UTC time stamp.
-    pub fn as_nano() -> u64 {
+    pub fn as_nano_sec() -> u64 {
         let utc = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
@@ -294,7 +284,7 @@ impl ToString for UUID {
 }
 
 /// Used to avoid duplicates that could arise when the clock is set backwards in time.
-pub struct ClockSeq(pub u16);
+pub struct ClockSeq(u16);
 
 impl ClockSeq {
     /// New atomic random value.
@@ -345,7 +335,8 @@ impl ToString for Node {
 }
 
 /// Type hold random number.
-pub struct Random(pub u128);
+pub struct Random(u128);
+pub struct Hash;
 
 #[cfg(test)]
 mod tests {
