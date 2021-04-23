@@ -8,7 +8,7 @@ use sha1::Sha1;
 use crate::{Hash, Layout, Node, Variant, Version, UUID};
 
 impl Layout {
-    fn from_hashed_fields(hash: [u8; 16], version: Version) -> Self {
+    fn from_hashed(hash: [u8; 16], version: Version) -> Self {
         Self {
             field_low: ((hash[0] as u32) << 24)
                 | (hash[1] as u32) << 16
@@ -28,7 +28,7 @@ impl Hash {
     /// Generate new UUID using MD5 algorithm.
     pub fn using_md5(any: &str, ns: UUID) -> Layout {
         let hash = md5::compute(Self::concat(any, ns)).0;
-        Layout::from_hashed_fields(hash, Version::MD5)
+        Layout::from_hashed(hash, Version::MD5)
     }
 
     /// Generate new UUID using SHA1 algorithm.
@@ -36,7 +36,7 @@ impl Hash {
         let hash = Sha1::from(Self::concat(any, ns)).digest().bytes()[..16]
             .try_into()
             .unwrap();
-        Layout::from_hashed_fields(hash, Version::SHA1)
+        Layout::from_hashed(hash, Version::SHA1)
     }
 
     fn concat(any: &str, ns: UUID) -> String {
@@ -48,7 +48,7 @@ impl Hash {
 #[macro_export]
 macro_rules! v3 {
     ($any:expr, $ns:expr) => {
-        format!("{:x}", $crate::Hash::using_md5($any, $ns).le_bytes())
+        format!("{:x}", $crate::Hash::using_md5($any, $ns).as_bytes())
     };
 }
 
@@ -56,7 +56,7 @@ macro_rules! v3 {
 #[macro_export]
 macro_rules! v5 {
     ($any:expr, $ns:expr) => {
-        format!("{:x}", $crate::Hash::using_sha1($any, $ns).le_bytes())
+        format!("{:x}", $crate::Hash::using_sha1($any, $ns).as_bytes())
     };
 }
 
