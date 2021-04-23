@@ -8,7 +8,7 @@ use sha1::Sha1;
 use crate::{Hash, Layout, Node, Variant, Version, UUID};
 
 impl Layout {
-    fn from_hashed(hash: [u8; 16], version: Version) -> Self {
+    fn from_hashed(hash: [u8; 16], v: Version) -> Self {
         Self {
             field_low: ((hash[0] as u32) << 24)
                 | (hash[1] as u32) << 16
@@ -16,7 +16,7 @@ impl Layout {
                 | hash[3] as u32,
             field_mid: (hash[4] as u16) << 8 | (hash[5] as u16),
             field_high_and_version: ((hash[6] as u16) << 8 | (hash[7] as u16)) & 0xfff
-                | (version as u16) << 12,
+                | (v as u16) << 12,
             clock_seq_high_and_reserved: (hash[8] & 0xf) | (Variant::RFC as u8) << 4,
             clock_seq_low: hash[9] as u8,
             node: Node([hash[10], hash[11], hash[12], hash[13], hash[14], hash[15]]),
@@ -26,13 +26,13 @@ impl Layout {
 
 impl Hash {
     /// Generate new UUID using MD5 algorithm.
-    pub fn using_md5(any: &str, ns: UUID) -> Layout {
+    pub fn v3(any: &str, ns: UUID) -> Layout {
         let hash = md5::compute(Self::concat(any, ns)).0;
         Layout::from_hashed(hash, Version::MD5)
     }
 
     /// Generate new UUID using SHA1 algorithm.
-    pub fn using_sha1(any: &str, ns: UUID) -> Layout {
+    pub fn v5(any: &str, ns: UUID) -> Layout {
         let hash = Sha1::from(Self::concat(any, ns)).digest().bytes()[..16]
             .try_into()
             .unwrap();
@@ -48,7 +48,7 @@ impl Hash {
 #[macro_export]
 macro_rules! v3 {
     ($any:expr, $ns:expr) => {
-        format!("{:x}", $crate::Hash::using_md5($any, $ns).as_bytes())
+        format!("{:x}", $crate::Hash::v3($any, $ns).as_bytes())
     };
 }
 
@@ -56,7 +56,7 @@ macro_rules! v3 {
 #[macro_export]
 macro_rules! v5 {
     ($any:expr, $ns:expr) => {
-        format!("{:x}", $crate::Hash::using_sha1($any, $ns).as_bytes())
+        format!("{:x}", $crate::Hash::v5($any, $ns).as_bytes())
     };
 }
 
@@ -74,8 +74,8 @@ mod tests {
         ];
 
         for s in ns.iter() {
-            assert_eq!(Hash::using_md5("any", *s).get_version(), Some(Version::MD5));
-            assert_eq!(Hash::using_md5("any", *s).get_variant(), Some(Variant::RFC));
+            assert_eq!(Hash::v3("any", *s).get_version(), Some(Version::MD5));
+            assert_eq!(Hash::v3("any", *s).get_variant(), Some(Variant::RFC));
         }
     }
 
@@ -89,14 +89,8 @@ mod tests {
         ];
 
         for s in ns.iter() {
-            assert_eq!(
-                Hash::using_sha1("any", *s).get_version(),
-                Some(Version::SHA1)
-            );
-            assert_eq!(
-                Hash::using_sha1("any", *s).get_variant(),
-                Some(Variant::RFC)
-            );
+            assert_eq!(Hash::v5("any", *s).get_version(), Some(Version::SHA1));
+            assert_eq!(Hash::v5("any", *s).get_variant(), Some(Variant::RFC));
         }
     }
 }

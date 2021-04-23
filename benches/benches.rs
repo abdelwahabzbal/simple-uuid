@@ -18,17 +18,17 @@ fn bench_new_v1(b: &mut Bencher) {
 
 #[bench]
 fn bench_new_v3(b: &mut Bencher) {
-    b.iter(|| Hash::using_md5("any", UUID::NAMESPACE_DNS));
+    b.iter(|| Hash::v3("any", UUID::NAMESPACE_DNS));
 }
 
 #[bench]
 fn bench_new_v4(b: &mut Bencher) {
-    b.iter(|| Random::new());
+    b.iter(|| Random::v4());
 }
 
 #[bench]
 fn bench_new_v5(b: &mut Bencher) {
-    b.iter(|| Hash::using_sha1("any", UUID::NAMESPACE_X500));
+    b.iter(|| Hash::v5("any", UUID::NAMESPACE_X500));
 }
 
 #[bench]
