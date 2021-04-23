@@ -1,46 +1,45 @@
 #![cfg(any(feature = "hash_md5", feauture = "hash_sha1"))]
 
+use std::convert::TryInto;
+
 use md5;
 use sha1::Sha1;
 
 use crate::{Hash, Layout, Node, Variant, Version, UUID};
 
-impl Hash {
-    /// Generate new UUID using MD5 algorithm.
-    pub fn from_md5(any: &str, ns: UUID) -> Layout {
-        let hash = md5::compute(Self::data(any, ns)).0;
-        Layout {
+impl Layout {
+    fn from_hashed_fields(hash: [u8; 16], version: Version) -> Self {
+        Self {
             field_low: ((hash[0] as u32) << 24)
                 | (hash[1] as u32) << 16
                 | (hash[2] as u32) << 8
                 | hash[3] as u32,
             field_mid: (hash[4] as u16) << 8 | (hash[5] as u16),
             field_high_and_version: ((hash[6] as u16) << 8 | (hash[7] as u16)) & 0xfff
-                | (Version::MD5 as u16) << 12,
+                | (version as u16) << 12,
             clock_seq_high_and_reserved: (hash[8] & 0xf) | (Variant::RFC as u8) << 4,
             clock_seq_low: hash[9] as u8,
             node: Node([hash[10], hash[11], hash[12], hash[13], hash[14], hash[15]]),
         }
+    }
+}
+
+impl Hash {
+    /// Generate new UUID using MD5 algorithm.
+    pub fn using_md5(any: &str, ns: UUID) -> Layout {
+        let hash = md5::compute(Self::concat(any, ns)).0;
+        Layout::from_hashed_fields(hash, Version::MD5)
     }
 
     /// Generate new UUID using SHA1 algorithm.
-    pub fn from_sha1(any: &str, ns: UUID) -> Layout {
-        let hash = Sha1::from(Self::data(any, ns)).digest().bytes();
-        Layout {
-            field_low: ((hash[0] as u32) << 24)
-                | (hash[1] as u32) << 16
-                | (hash[2] as u32) << 8
-                | hash[3] as u32,
-            field_mid: (hash[4] as u16) << 8 | (hash[5] as u16),
-            field_high_and_version: ((hash[6] as u16) << 8 | (hash[7] as u16)) & 0xfff
-                | (Version::SHA1 as u16) << 12,
-            clock_seq_high_and_reserved: (hash[8] & 0xf) | (Variant::RFC as u8) << 4,
-            clock_seq_low: hash[9] as u8,
-            node: Node([hash[10], hash[11], hash[12], hash[13], hash[14], hash[15]]),
-        }
+    pub fn using_sha1(any: &str, ns: UUID) -> Layout {
+        let hash = Sha1::from(Self::concat(any, ns)).digest().bytes()[..16]
+            .try_into()
+            .unwrap();
+        Layout::from_hashed_fields(hash, Version::SHA1)
     }
 
-    fn data(any: &str, ns: UUID) -> String {
+    fn concat(any: &str, ns: UUID) -> String {
         format!("{:x}", ns) + any
     }
 }
@@ -49,7 +48,7 @@ impl Hash {
 #[macro_export]
 macro_rules! v3 {
     ($any:expr, $ns:expr) => {
-        format!("{:x}", $crate::Hash::from_md5($any, $ns).le_bytes())
+        format!("{:x}", $crate::Hash::using_md5($any, $ns).le_bytes())
     };
 }
 
@@ -57,7 +56,7 @@ macro_rules! v3 {
 #[macro_export]
 macro_rules! v5 {
     ($any:expr, $ns:expr) => {
-        format!("{:x}", $crate::Hash::from_sha1($any, $ns).le_bytes())
+        format!("{:x}", $crate::Hash::using_sha1($any, $ns).le_bytes())
     };
 }
 
@@ -75,8 +74,8 @@ mod tests {
         ];
 
         for s in ns.iter() {
-            assert_eq!(Hash::from_md5("any", *s).get_version(), Some(Version::MD5));
-            assert_eq!(Hash::from_md5("any", *s).get_variant(), Some(Variant::RFC));
+            assert_eq!(Hash::using_md5("any", *s).get_version(), Some(Version::MD5));
+            assert_eq!(Hash::using_md5("any", *s).get_variant(), Some(Variant::RFC));
         }
     }
 
@@ -91,10 +90,13 @@ mod tests {
 
         for s in ns.iter() {
             assert_eq!(
-                Hash::from_sha1("any", *s).get_version(),
+                Hash::using_sha1("any", *s).get_version(),
                 Some(Version::SHA1)
             );
-            assert_eq!(Hash::from_sha1("any", *s).get_variant(), Some(Variant::RFC));
+            assert_eq!(
+                Hash::using_sha1("any", *s).get_variant(),
+                Some(Variant::RFC)
+            );
         }
     }
 }

@@ -5,7 +5,7 @@ use mac_address;
 use crate::{Layout, Node, TimeStamp, Variant, Version, UUID};
 
 impl Layout {
-    pub fn new(utc: u64, clock_seq: (u8, u8)) -> Self {
+    fn from_time_fields(utc: u64, clock_seq: (u8, u8)) -> Self {
         Self {
             field_low: (utc & 0xffff_ffff) as u32,
             field_mid: ((utc >> 32 & 0xffff) as u16),
@@ -21,7 +21,7 @@ impl TimeStamp {
     pub fn v1() -> Layout {
         let clock_seq: (u8, u8) = crate::clock_seq_high_and_reserved(Variant::RFC as u8);
         let utc = TimeStamp::as_nano_sec();
-        Layout::new(utc, clock_seq)
+        Layout::from_time_fields(utc, clock_seq)
     }
 }
 
@@ -30,14 +30,14 @@ impl UUID {
         let utc = TimeStamp::as_nano_sec();
         let clock_seq = crate::clock_seq_high_and_reserved(Variant::RFC as u8);
 
-        let mut layout = Layout::new(utc, clock_seq);
+        let mut layout = Layout::from_time_fields(utc, clock_seq);
         layout.node = node;
         layout
     }
 
     pub fn from_utc(utc: u64) -> Layout {
         let clock_seq = crate::clock_seq_high_and_reserved(Variant::RFC as u8);
-        Layout::new(utc, clock_seq)
+        Layout::from_time_fields(utc, clock_seq)
     }
 }
 
