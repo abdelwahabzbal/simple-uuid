@@ -5,7 +5,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! simple-uuid = { version = "0.1.0", features = ["random"] }
+//! simple-uuid = { version = "*", features = ["random"] }
 //! ```
 //!
 //! ```rust
