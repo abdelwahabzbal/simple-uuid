@@ -5,39 +5,39 @@ use mac_address;
 use crate::{Layout, Node, TimeStamp, Variant, Version, UUID};
 
 impl Layout {
-    fn from_time_fields(utc: u64, clock_seq: (u8, u8)) -> Self {
+    fn from_time_fields(utc: u64, clock_seq: (u8, u8), node: Node) -> Self {
         Self {
             field_low: (utc & 0xffff_ffff) as u32,
             field_mid: ((utc >> 32 & 0xffff) as u16),
             field_high_and_version: (utc >> 48 & 0xfff) as u16 | (Version::TIME as u16) << 12,
             clock_seq_high_and_reserved: clock_seq.0,
             clock_seq_low: clock_seq.1,
-            node: Node(mac_address::get_mac_address().unwrap().unwrap().bytes()),
+            node: node,
         }
     }
 }
 
 impl TimeStamp {
+    /// New UUID version-1
     pub fn v1() -> Layout {
         let clock_seq: (u8, u8) = crate::clock_seq_high_and_reserved(Variant::RFC as u8);
         let utc = TimeStamp::as_nano_sec();
-        Layout::from_time_fields(utc, clock_seq)
+        Layout::from_time_fields(utc, clock_seq, mac_address_dev())
     }
 }
 
 impl UUID {
+    /// New UUID with a user defined MAC-address.
     pub fn from_node(node: Node) -> Layout {
         let utc = TimeStamp::as_nano_sec();
         let clock_seq = crate::clock_seq_high_and_reserved(Variant::RFC as u8);
-
-        let mut layout = Layout::from_time_fields(utc, clock_seq);
-        layout.node = node;
-        layout
+        Layout::from_time_fields(utc, clock_seq, node)
     }
 
+    /// New UUID version-1 with specific time stamp.
     pub fn from_utc(utc: u64) -> Layout {
         let clock_seq = crate::clock_seq_high_and_reserved(Variant::RFC as u8);
-        Layout::from_time_fields(utc, clock_seq)
+        Layout::from_time_fields(utc, clock_seq, mac_address_dev())
     }
 }
 
@@ -53,7 +53,11 @@ impl Layout {
     }
 }
 
-/// Quick `UUID` version-1
+fn mac_address_dev() -> Node {
+    Node(mac_address::get_mac_address().unwrap().unwrap().bytes())
+}
+
+/// `UUID` version-1
 #[macro_export]
 macro_rules! v1 {
     () => {
