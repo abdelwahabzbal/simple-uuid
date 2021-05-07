@@ -10,7 +10,6 @@
 //!
 //! ```rust
 //! use simple_uuid::v4;
-//!
 //! println!("{}", v4!());
 //! ```
 #![doc(html_root_url = "https://docs.rs/simple-uuid")]
