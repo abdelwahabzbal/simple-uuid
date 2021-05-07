@@ -10,6 +10,7 @@
 //!
 //! ```rust
 //! use simple_uuid::v4;
+//!
 //! println!("{}", v4!());
 //! ```
 #![doc(html_root_url = "https://docs.rs/simple-uuid")]
@@ -167,8 +168,8 @@ pub enum Version {
 pub struct TimeStamp(u64);
 
 impl TimeStamp {
-    /// Generate new UTC time stamp.
-    pub fn as_nano_sec() -> u64 {
+    /// Generate new UTC timestamp.
+    pub fn new_ts() -> u64 {
         let utc = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
@@ -334,8 +335,13 @@ impl ToString for Node {
     }
 }
 
-/// Type hold random number.
 pub struct Random(u128);
+
+pub enum Algo {
+    MD5,
+    SHA1,
+}
+
 pub struct Hash;
 
 #[cfg(test)]
