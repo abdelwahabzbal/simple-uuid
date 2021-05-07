@@ -5,7 +5,7 @@ use mac_address;
 use crate::{Layout, Node, TimeStamp, Variant, Version, UUID};
 
 impl Layout {
-    fn from_time_fields(utc: u64, clock_seq: (u8, u8), node: Node) -> Self {
+    fn time_fields(utc: u64, clock_seq: (u8, u8), node: Node) -> Self {
         Self {
             field_low: (utc & 0xffff_ffff) as u32,
             field_mid: ((utc >> 32 & 0xffff) as u16),
@@ -19,36 +19,36 @@ impl Layout {
 
 impl TimeStamp {
     /// New UUID version-1
-    pub fn v1() -> Layout {
+    pub fn new() -> Layout {
         let clock_seq: (u8, u8) = crate::clock_seq_high_and_reserved(Variant::RFC as u8);
-        let utc = TimeStamp::as_nano_sec();
-        Layout::from_time_fields(utc, clock_seq, mac_address_dev())
+        let utc = TimeStamp::new_ts();
+        Layout::time_fields(utc, clock_seq, mac_address_dev())
     }
 }
 
 impl UUID {
     /// New UUID with a user defined MAC-address.
     pub fn from_node(node: Node) -> Layout {
-        let utc = TimeStamp::as_nano_sec();
+        let utc = TimeStamp::new_ts();
         let clock_seq = crate::clock_seq_high_and_reserved(Variant::RFC as u8);
-        Layout::from_time_fields(utc, clock_seq, node)
+        Layout::time_fields(utc, clock_seq, node)
     }
 
     /// New UUID version-1 with specific time stamp.
     pub fn from_utc(utc: u64) -> Layout {
         let clock_seq = crate::clock_seq_high_and_reserved(Variant::RFC as u8);
-        Layout::from_time_fields(utc, clock_seq, mac_address_dev())
+        Layout::time_fields(utc, clock_seq, mac_address_dev())
     }
 }
 
 impl Layout {
     /// Get timestamp where the UUID generated in.
-    pub fn get_time_stamp(&self) -> TimeStamp {
-        TimeStamp(self.field_low as u64)
+    pub fn get_ts(&self) -> u64 {
+        self.field_low as u64
     }
 
     /// Get the MAC-address where the UUID generated with.
-    pub fn get_mac_address(&self) -> Node {
+    pub fn get_mac_addr(&self) -> Node {
         self.node
     }
 }
@@ -71,7 +71,7 @@ mod tests {
 
     #[test]
     fn new_uuid_from_timestamp() {
-        let uuid = TimeStamp::v1();
+        let uuid = TimeStamp::new();
         assert_eq!(uuid.get_version(), Some(Version::TIME));
         assert_eq!(uuid.get_variant(), Some(Variant::RFC));
     }
@@ -80,16 +80,13 @@ mod tests {
     fn new_uuid_from_user_defined_mac_address() {
         let uuid = UUID::from_node(Node([0x03, 0x2a, 0x35, 0x0d, 0x13, 0x80]));
         assert_eq!(uuid.get_version(), Some(Version::TIME));
-        assert_eq!(
-            uuid.get_mac_address().0,
-            [0x03, 0x2a, 0x35, 0x0d, 0x13, 0x80]
-        );
+        assert_eq!(uuid.get_mac_addr().0, [0x03, 0x2a, 0x35, 0x0d, 0x13, 0x80]);
     }
 
     #[test]
     fn new_uuid_from_custom_time() {
         let uuid = UUID::from_utc(0x1234_u64);
         assert_eq!(uuid.get_version(), Some(Version::TIME));
-        assert_eq!(uuid.get_time_stamp(), TimeStamp(0x1234_u64));
+        assert_eq!(uuid.get_ts(), 0x1234_u64);
     }
 }

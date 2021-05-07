@@ -4,8 +4,8 @@ use crate::{Layout, Node, Random, Variant, Version};
 use rand as random;
 
 impl Random {
-    /// New UUID from truly-random numbers.
-    pub fn v4() -> Layout {
+    /// New UUID from truly random number.
+    pub fn new() -> Layout {
         let rand = random::random::<u128>().to_le_bytes();
         Layout {
             field_low: ((rand[0] as u32) << 24)
@@ -22,11 +22,11 @@ impl Random {
     }
 }
 
-/// Quick `UUID` version-4
+/// `UUID` version-4
 #[macro_export]
 macro_rules! v4 {
     () => {
-        format!("{:x}", $crate::Random::v4().as_bytes())
+        format!("{:x}", $crate::Random::new().as_bytes())
     };
 }
 
@@ -36,7 +36,7 @@ mod tests {
 
     #[test]
     fn new_v4() {
-        let uuid = Random::v4();
+        let uuid = Random::new();
         assert_eq!(uuid.get_version(), Some(Version::RAND));
         assert_eq!(uuid.get_variant(), Some(Variant::RFC));
     }
