@@ -14,7 +14,6 @@ simple-uuid = { version = "*", features = ["random"] }
 ## Usage
 ```Rust
 use simple_uuid::v4;
-
 println!("{}", v4!())
 ```
 
