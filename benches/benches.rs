@@ -1,7 +1,7 @@
 #![feature(test)]
 #![cfg(any(
-    feature = "mac",
-    feature = "random",
+    feature = "mac_addr",
+    feature = "rand_num",
     feature = "hash_md5",
     feature = "hash_sha1",
 ))]

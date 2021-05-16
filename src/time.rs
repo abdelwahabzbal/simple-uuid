@@ -1,16 +1,17 @@
-#![cfg(feature = "mac")]
+#![doc(cfg(feature = "mac_addr"))]
+#![cfg(feature = "mac_addr")]
 
 use mac_address;
 
 use crate::{Layout, Node, TimeStamp, Variant, Version, UUID};
 
 impl Layout {
-    /// Get timestamp where the UUID generated in.
+    /// Get timestamp where the UUID generated in
     pub fn get_timestamp(&self) -> u64 {
         self.field_low as u64
     }
 
-    /// Get the MAC-address where the UUID generated with.
+    /// Get the MAC-address where the UUID generated with
     pub fn get_mac_addr(&self) -> Node {
         self.node
     }
@@ -35,14 +36,14 @@ impl UUID {
         Layout::time_fields(utc, clock_seq, device_mac_addr())
     }
 
-    /// New UUID with a user defined MAC-address.
+    /// New UUID with a user defined MAC-address
     pub fn from_node(node: Node) -> Layout {
         let utc = TimeStamp::new();
         let clock_seq = crate::clock_seq_high_and_reserved(Variant::RFC as u8);
         Layout::time_fields(utc, clock_seq, node)
     }
 
-    /// New UUID with specific timestamp.
+    /// New UUID with specific timestamp
     pub fn from_utc(utc: u64) -> Layout {
         let clock_seq = crate::clock_seq_high_and_reserved(Variant::RFC as u8);
         Layout::time_fields(utc, clock_seq, device_mac_addr())
@@ -54,6 +55,7 @@ fn device_mac_addr() -> Node {
 }
 
 /// `UUID` version-1
+#[doc(cfg(feature = "mac_addr"))]
 #[macro_export]
 macro_rules! v1 {
     () => {
