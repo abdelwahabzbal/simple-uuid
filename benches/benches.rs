@@ -9,34 +9,34 @@
 extern crate test;
 use test::Bencher;
 
-use simple_uuid::{Algo, Hash, Node, Random, TimeStamp, UUID};
+use simple_uuid::{self, Node, UUID};
 
 #[bench]
-fn bench_new_v1(b: &mut Bencher) {
-    b.iter(|| TimeStamp::new());
+fn new_v1_from_system_time(b: &mut Bencher) {
+    b.iter(|| simple_uuid::v1!());
 }
 
 #[bench]
-fn bench_new_v3(b: &mut Bencher) {
-    b.iter(|| Hash::new(Algo::MD5, "any", UUID::NAMESPACE_DNS));
-}
-
-#[bench]
-fn bench_new_v4(b: &mut Bencher) {
-    b.iter(|| Random::new());
-}
-
-#[bench]
-fn bench_new_v5(b: &mut Bencher) {
-    b.iter(|| Hash::new(Algo::SHA1, "any", UUID::NAMESPACE_X500));
-}
-
-#[bench]
-fn bench_from_mac_address(b: &mut Bencher) {
+fn new_v1_from_mac_address(b: &mut Bencher) {
     b.iter(|| Node::from(Node([0x03, 0x2a, 0x35, 0x0d, 0x13, 0x80])));
 }
 
 #[bench]
-fn bench_from_utc(b: &mut Bencher) {
+fn new_v1_from_utc(b: &mut Bencher) {
     b.iter(|| UUID::from_utc(0x1234));
+}
+
+#[bench]
+fn new_v3_using_md5(b: &mut Bencher) {
+    b.iter(|| simple_uuid::v3!("test_data", UUID::NAMESPACE_DNS));
+}
+
+#[bench]
+fn new_v4_with_random_number(b: &mut Bencher) {
+    b.iter(|| simple_uuid::v4!());
+}
+
+#[bench]
+fn new_v5_using_sha1(b: &mut Bencher) {
+    b.iter(|| simple_uuid::v5!("test_data", UUID::NAMESPACE_X500));
 }

@@ -168,7 +168,7 @@ pub struct TimeStamp(u64);
 
 impl TimeStamp {
     /// Generate new UTC timestamp.
-    pub fn new_ts() -> u64 {
+    pub fn new() -> u64 {
         let utc = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
