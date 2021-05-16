@@ -8,7 +8,7 @@ This crate generates and inspects UUIDs based on [RFC 4122](http://tools.ietf.or
 ## Install
 ```TOML
 [dependencies]
-simple-uuid = { version = "*", features = ["random"] }
+simple-uuid = { version = "*", features = ["rand_num"] }
 ```
 
 ## Usage

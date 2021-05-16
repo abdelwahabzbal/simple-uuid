@@ -5,7 +5,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! simple-uuid = { version = "*", features = ["random"] }
+//! simple-uuid = { version = "*", features = ["rand_num"] }
 //! ```
 //!
 //! ```rust
@@ -13,6 +13,7 @@
 //! println!("{}", v4!());
 //! ```
 #![doc(html_root_url = "https://docs.rs/simple-uuid")]
+#![feature(doc_cfg)]
 
 mod name;
 mod random;
@@ -333,15 +334,6 @@ impl ToString for Node {
         )
     }
 }
-
-pub struct Random(u128);
-
-pub enum Algo {
-    MD5,
-    SHA1,
-}
-
-pub struct Hash;
 
 #[cfg(test)]
 mod tests {

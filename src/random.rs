@@ -1,10 +1,11 @@
-#![cfg(feature = "random")]
+#![doc(cfg(feature = "rand_num"))]
+#![cfg(feature = "rand_num")]
 
 use crate::{Layout, Node, Variant, Version, UUID};
 use rand as random;
 
 impl UUID {
-    /// New UUID version-4 from truly-random number.
+    /// New UUID version-4 from truly-random number
     pub fn new_from_rand() -> Layout {
         let rand = random::random::<u128>().to_le_bytes();
         Layout {
@@ -23,6 +24,7 @@ impl UUID {
 }
 
 /// `UUID` version-4
+#[doc(cfg(feature = "rand_num"))]
 #[macro_export]
 macro_rules! v4 {
     () => {

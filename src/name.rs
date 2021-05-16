@@ -26,12 +26,14 @@ impl Layout {
 
 impl UUID {
     /// New UUID version-3 using md5 algorithme
+    #[doc(cfg(feature = "hash_md5"))]
     pub fn using_md5(data: &str, ns: UUID) -> Layout {
         let hash = md5::compute(Self::concat(data, ns)).0;
         Layout::hash_fields(hash, Version::MD5)
     }
 
     /// New UUID version-5 using sha1 algorithme
+    #[doc(cfg(feature = "hash_sha1"))]
     pub fn using_sha1(data: &str, ns: UUID) -> Layout {
         let hash = Sha1::from(Self::concat(data, ns)).digest().bytes()[..16]
             .try_into()
@@ -45,6 +47,7 @@ impl UUID {
 }
 
 /// `UUID` version-3
+#[doc(cfg(feature = "hash_md5"))]
 #[macro_export]
 macro_rules! v3 {
     ($data:expr, $ns:expr) => {
@@ -53,6 +56,7 @@ macro_rules! v3 {
 }
 
 /// `UUID` version-5
+#[doc(cfg(feature = "hash_sha1"))]
 #[macro_export]
 macro_rules! v5 {
     ($data:expr, $ns:expr) => {
