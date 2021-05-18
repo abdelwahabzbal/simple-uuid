@@ -301,8 +301,8 @@ fn clock_seq_high_and_reserved(s: u8) -> (u8, u8) {
         (clock_seq & 0xff) as u8,
     )
 }
-/// The clock sequence is used to help avoid duplicates that could arise
-/// when the clock is set backwards in time or if the node ID changes.
+/// Node field consists of an IEEE 802 MAC address,
+/// usually the host address
 #[derive(Debug, PartialEq, Default, Copy, Clone)]
 pub struct Node(pub [u8; 6]);
 
