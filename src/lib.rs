@@ -111,7 +111,7 @@ impl Layout {
     }
 
     /// Version of the current generated UUID.
-    pub fn get_version(&self) -> Option<Version> {
+    pub const fn get_version(&self) -> Option<Version> {
         match (self.field_high_and_version >> 12) & 0xf {
             0x01 => Some(Version::TIME),
             0x02 => Some(Version::DCE),
@@ -123,7 +123,7 @@ impl Layout {
     }
 
     /// Variant field of the current generated UUID.
-    pub fn get_variant(&self) -> Option<Variant> {
+    pub const fn get_variant(&self) -> Option<Variant> {
         match (self.clock_seq_high_and_reserved >> 4) & 0xf {
             0x00 => Some(Variant::NCS),
             0x01 => Some(Variant::RFC),

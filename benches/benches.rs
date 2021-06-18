@@ -23,7 +23,7 @@ fn new_v1_from_mac_address(b: &mut Bencher) {
 
 #[bench]
 fn new_v1_from_utc(b: &mut Bencher) {
-    b.iter(|| UUID::from_utc(0x1234));
+    b.iter(|| UUID::new_from_utc(0x1234));
 }
 
 #[bench]
