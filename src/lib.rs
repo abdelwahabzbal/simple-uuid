@@ -16,12 +16,14 @@
 #![feature(doc_cfg)]
 
 mod name;
-mod random;
+mod rand;
 mod time;
 
 use core::fmt;
 use core::sync::atomic;
 use std::time::SystemTime;
+
+use rand_core::{OsRng, RngCore};
 
 /// Is 100-ns ticks between UNIX and UTC epochs.
 pub const UTC_EPOCH: u64 = 0x1b21_dd21_3814_000;
@@ -295,7 +297,10 @@ impl ClockSeq {
 }
 
 fn clock_seq_high_and_reserved(s: u8) -> (u8, u8) {
-    let clock_seq = ClockSeq::new(rand::random::<u16>());
+    let mut key = [0u8; 2];
+    OsRng.fill_bytes(&mut key);
+    let random_u64 = (OsRng.next_u64() & 0xff) as u16;
+    let clock_seq = ClockSeq::new(random_u64);
     (
         ((clock_seq >> 8) & 0xf) as u8 | s << 4,
         (clock_seq & 0xff) as u8,
