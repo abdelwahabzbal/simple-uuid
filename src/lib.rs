@@ -21,6 +21,7 @@ mod time;
 
 use core::fmt;
 use core::sync::atomic;
+use std::string::ToString;
 use std::time::SystemTime;
 
 use rand_core::{OsRng, RngCore};
@@ -93,14 +94,14 @@ impl Layout {
     /// Return the memory representation of the UUID in little-endian order .
     pub fn as_bytes(&self) -> UUID {
         UUID([
-            self.field_low.to_be_bytes()[3],
-            self.field_low.to_be_bytes()[2],
-            self.field_low.to_be_bytes()[1],
-            self.field_low.to_be_bytes()[0],
-            self.field_mid.to_be_bytes()[1],
-            self.field_mid.to_be_bytes()[0],
-            self.field_high_and_version.to_be_bytes()[1],
-            self.field_high_and_version.to_be_bytes()[0],
+            self.field_low.to_le_bytes()[3],
+            self.field_low.to_le_bytes()[2],
+            self.field_low.to_le_bytes()[1],
+            self.field_low.to_le_bytes()[0],
+            self.field_mid.to_le_bytes()[1],
+            self.field_mid.to_le_bytes()[0],
+            self.field_high_and_version.to_le_bytes()[1],
+            self.field_high_and_version.to_le_bytes()[0],
             self.clock_seq_high_and_reserved,
             self.clock_seq_low,
             self.node.0[5],
@@ -174,9 +175,9 @@ impl TimeStamp {
     pub fn new() -> u64 {
         let utc = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap()
+            .expect("elapsed time ")
             .checked_add(std::time::Duration::from_nanos(UTC_EPOCH))
-            .unwrap()
+            .expect("duration addition error")
             .as_nanos();
         (utc & 0xffff_ffff_ffff_fff) as u64
     }

@@ -46,6 +46,12 @@ impl UUID {
     }
 }
 
+impl ToString for Layout {
+    fn to_string(&self) -> String {
+        format!("{:02x}", self.as_bytes(),)
+    }
+}
+
 /// `UUID` version-3
 #[doc(cfg(feature = "hash_md5"))]
 #[macro_export]
